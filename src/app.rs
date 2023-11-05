@@ -67,7 +67,6 @@ impl eframe::App for TemplateApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
             ui.heading("Screen Capture");
-
             ui.horizontal(|ui| {
                 ui.label("Write something: ");
                 ui.text_edit_singleline(&mut self.label);
@@ -79,6 +78,9 @@ impl eframe::App for TemplateApp {
             }
 
             ui.separator();
+            if ui.add_sized([40., 40.], egui::Button::new("📷").rounding(100.)).clicked(){
+                println!("Done")
+            }
 
             ui.add(egui::github_link_file!(
                 "https://github.com/emilk/eframe_template/blob/master/",
