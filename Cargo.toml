@@ -6,5 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 screenshots = "0.8.5"
-iced = {version = "0.10", features = ["svg", "tokio"]}
+iced = {version = "0.10", features = ["svg", "tokio", "image"]}
 tokio = "1.33.0"
+dark-light = "1.0.0"
+tracing-subscriber = "0.3.17"
+image = { version = "0.24.7", features = [] }
