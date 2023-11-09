@@ -1,16 +1,16 @@
 use std::thread;
 use std::time::Duration;
-use iced::{theme, color, Application, Command, Element, Renderer, executor, Theme, window, Length, alignment, Alignment, ContentFit};
-use iced::alignment::{Horizontal, Vertical};
-use iced::widget::{button, container, column, svg, row, horizontal_space, text, Container, Column, image, Image};
+use iced::{Application, Command, Element, Renderer, executor, Theme, window, Length, alignment, Alignment, ContentFit};
+use iced::widget::{container, column, row, text, image};
 use iced::window::Mode;
 use screenshots::image::RgbaImage;
 use screenshots::Screen;
 
+use crate::custom_widgets::image_button;
+
 #[derive(Default)]
 pub struct Capture {
     screenshot: Option<RgbaImage>,
-    screens: Vec<Screen>
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -27,7 +27,7 @@ impl Application for Capture {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (Self { screenshot: None, screens: Screen::all().unwrap() }, Command::none())
+        (Self { screenshot: None }, Command::none())
     }
 
     fn title(&self) -> String {
@@ -109,29 +109,4 @@ fn screenshot(target: &mut Capture) {
     let screens = Screen::all().unwrap();
     let image = screens[0].capture().unwrap();
     target.screenshot = Some(image);
-}
-
-fn image_button<'a>(image_name: &'a str, description: &'a str, message: Message) -> Container<'a, Message, Renderer> {
-    let handle = svg::Handle::from_path(format!(
-        "{}/resources/{}.svg",
-        env!("CARGO_MANIFEST_DIR"),
-        image_name
-    ));
-
-    let svg = svg(handle).width(Length::Fill).height(Length::Fill)
-        .style(theme::Svg::custom_fn(|_theme| svg::Appearance {
-            color: Some(color!(0xffffff)),
-        }));
-    let c = column![
-        text(description),
-        container(
-            button(svg)
-            .on_press(message)
-            .style(theme::Button::Primary)
-            .width(65)
-            .height(50)
-        ),
-    ].align_items(Alignment::Center);
-
-    container(c).center_x()
 }
