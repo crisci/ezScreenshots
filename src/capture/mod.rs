@@ -1,19 +1,22 @@
 use std::thread;
 use std::time::Duration;
 use iced::{Length, theme, color, Application, Command, Element, Renderer, executor, Theme, window};
-use iced::widget::{button, container, column, svg, row, horizontal_space, text};
+use iced::theme::TextInput;
+use iced::widget::{button, container, column, svg, row, horizontal_space, text, text_input, Row, Column};
 use iced::window::Mode;
 use screenshots::Screen;
+use iced_aw::{number_input, style::NumberInputStyles};
 
 #[derive(Default)]
 pub struct Capture {
-    screens: Vec<Screen>
+    screens: Vec<Screen>,
+    timer: u64,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     Screenshot(usize),
-    WindowHidden
+    WindowHidden,
 }
 
 impl Application for Capture {
@@ -23,7 +26,7 @@ impl Application for Capture {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (Self { screens: Screen::all().unwrap() }, Command::none())
+        (Self { screens: Screen::all().unwrap(), timer: 0 }, Command::none())
     }
 
     fn title(&self) -> String {
@@ -33,10 +36,13 @@ impl Application for Capture {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         return match message {
             Message::Screenshot(n) => {
+                if self.timer > 0 {
+                    thread::sleep(Duration::from_secs(self.timer));
+                }
+                let change_mode = window::change_mode(window::Mode::Hidden);
                 thread::spawn(move || {
                     screenshot(n);
                 });
-                let change_mode = window::change_mode(window::Mode::Hidden);
                 let wait = Command::perform(tokio::time::sleep(std::time::Duration::from_secs(1)), |_| Message::WindowHidden);
                 Command::batch(vec![change_mode, wait])
             },
@@ -56,9 +62,9 @@ impl Application for Capture {
             .style(theme::Svg::custom_fn(|_theme| svg::Appearance {
                 color: Some(color!(0xffffff)),
         }));
-        let mut content = row![text("Screenshot")];
+        let mut content = Row::new();
         if self.screens.iter().count() == 1 {
-            content = row![image_button(svg1, 0)]
+            content = Row::new().push(image_button(svg1, 0));
         } else {
             let monitor2 = svg::Handle::from_path(format!(
                 "{}/resources/monitor2.svg",
@@ -68,17 +74,14 @@ impl Application for Capture {
                 .style(theme::Svg::custom_fn(|_theme| svg::Appearance {
                     color: Some(color!(0xffffff)),
                 }));
-            content = row![
-                image_button(svg1, 0),
-                horizontal_space(10),
-                image_button(svg2, 1),
-            ];
+            content = Row::new()
+                .push(image_button(svg1, 0))
+                .push(horizontal_space(10))
+                .push(image_button(svg2, 1));
         }
 
         container(
-            column![
-                content
-            ]
+            content
         )
             .width(Length::Fill)
             .height(Length::Fill)
@@ -95,7 +98,6 @@ impl Application for Capture {
 }
 
 fn screenshot(target_screen: usize) {
-    thread::sleep(Duration::from_millis(500));
     let screens = Screen::all().unwrap();
     let image = screens[target_screen].capture().unwrap();
     image.save(format!("./monitor-{}.png", target_screen)).unwrap();

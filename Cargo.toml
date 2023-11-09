@@ -7,4 +7,8 @@ edition = "2021"
 [dependencies]
 screenshots = "0.8.5"
 iced = {version = "0.10", features = ["svg", "tokio"]}
+iced_aw = { version = "0.7.0", features = [
+    "number_input",
+    "icons",
+] }
 tokio = "1.33.0"
