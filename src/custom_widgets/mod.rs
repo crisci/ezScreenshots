@@ -1,9 +1,11 @@
 mod custom_button;
+
 use iced::{widget::{svg, Container, column, text, container, button}, Renderer, Length, color, Alignment, mouse::Button, theme::Svg, theme, Color, application};
 use iced::application::Appearance;
 
-use crate::capture::Message;
+
 use crate::custom_widgets::custom_button::RadiusButton;
+use crate::capture::Message;
 
 #[derive(Default)]
 pub struct CustomTheme {}
@@ -38,6 +40,7 @@ pub fn image_button<'a>(image_name: &'a str, description: &'static str, message:
         }));
     let (h, w) = if description == "Screenshot" { (70, 55) } else { (55, 55) };
     let c = column![
+
         text(description),
         container(
             button(svg)
