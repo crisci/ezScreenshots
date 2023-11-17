@@ -3,6 +3,7 @@ use iced::widget::{
     button, container, horizontal_space, row, svg, text,
 };
 use iced::{alignment, theme, Application, Color, Element, Length, Renderer};
+use iced::theme::Text;
 
 use iced_aw::menu::{menu_tree::MenuTree, CloseCondition, ItemHeight, ItemWidth, PathHighlight};
 use iced_aw::{helpers::menu_tree, menu_bar, menu_tree};
@@ -103,7 +104,9 @@ fn menu_file<'a>(_app: &Capture) -> MenuTree<'a, Message, iced::Renderer> {
         ],
     ).width(180);
     let root = menu_tree(
-        "File",
+        container(text("File")
+            .style(theme::Text::Color(Color::from_rgb8(255, 255, 255))))
+            .padding([0, 2, 0, 2]),
         vec![
             debug_item("Save"),
             save_as,
@@ -117,7 +120,9 @@ fn menu_file<'a>(_app: &Capture) -> MenuTree<'a, Message, iced::Renderer> {
 
 fn menu_settings<'a>(_app: &Capture) -> MenuTree<'a, Message, iced::Renderer> {
     let root = menu_tree(
-        "Settings",
+        container(text("Settings")
+            .style(theme::Text::Color(Color::from_rgb8(255, 255, 255))))
+            .padding([0, 2, 0, 2]),
         vec![
             debug_item("Short keys"),
 
@@ -149,7 +154,7 @@ pub fn top_menu(_app: &Capture) -> Column<'_, Message> {
 
     let top_bar_style: fn(&iced::Theme) -> container::Appearance =
         |_theme| container::Appearance {
-            background: Some(Color::TRANSPARENT.into()),
+            background: Some(Color::from_rgb8(68, 68, 68).into()),
             ..Default::default()
         };
     let top_bar = container(r).width(Length::Fill).style(top_bar_style);
