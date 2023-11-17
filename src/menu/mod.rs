@@ -2,12 +2,12 @@ use iced::widget::{column, Column, Container};
 use iced::widget::{
     button, container, horizontal_space, row, svg, text,
 };
-use iced::{alignment, theme, Application, Color, Element, Length, Renderer};
+use iced::{alignment, theme, Color, Element, Length, Renderer};
 use iced::theme::Text;
 
 use iced_aw::menu::{menu_tree::MenuTree, CloseCondition, ItemHeight, ItemWidth, PathHighlight};
 use iced_aw::{helpers::menu_tree, menu_bar, menu_tree};
-use crate::capture::{Capture, Message};
+use crate::app::{App, Message};
 
 struct ButtonStyle;
 impl button::StyleSheet for ButtonStyle {
@@ -26,7 +26,7 @@ impl button::StyleSheet for ButtonStyle {
         let plt = style.extended_palette();
 
         button::Appearance {
-            background: Some(plt.primary.weak.color.into()),
+            background: Some(Color::from_rgb8(220, 220, 220).into()),
             text_color: plt.primary.weak.text,
             ..self.active(style)
         }
@@ -54,7 +54,7 @@ fn labeled_button<'a>(label: &str, msg: Message) -> button::Button<'a, Message, 
 }
 
 fn debug_button<'a>(label: &str) -> button::Button<'a, Message, iced::Renderer> {
-    labeled_button(label, Message::Debug(label.into()))
+    labeled_button(label, Message::MenuAction(label.into()))
 }
 
 fn debug_item<'a>(label: &str) -> MenuTree<'a, Message, iced::Renderer> {
@@ -91,25 +91,17 @@ fn sub_menu<'a>(label: &str, msg: Message, children: Vec<MenuTree<'a, Message, i
 }
 
 fn debug_sub_menu<'a>(label: &str, children: Vec<MenuTree<'a, Message, iced::Renderer>>, ) -> MenuTree<'a, Message, iced::Renderer> {
-    sub_menu(label, Message::Debug(label.into()), children)
+    sub_menu(label, Message::MenuAction(label.into()), children)
 }
 
-fn menu_file<'a>(_app: &Capture) -> MenuTree<'a, Message, iced::Renderer> {
-    let save_as = debug_sub_menu(
-        "Save as...",
-        vec![
-            debug_item("jpg"),
-            debug_item("png"),
-            debug_item("gif"),
-        ],
-    ).width(180);
+fn menu_file<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
     let root = menu_tree(
         container(text("File")
             .style(theme::Text::Color(Color::from_rgb8(255, 255, 255))))
             .padding([0, 2, 0, 2]),
         vec![
             debug_item("Save"),
-            save_as,
+            debug_item("Save as..."),
             debug_item("Settings...")
 
         ],
@@ -118,7 +110,7 @@ fn menu_file<'a>(_app: &Capture) -> MenuTree<'a, Message, iced::Renderer> {
     root
 }
 
-fn menu_settings<'a>(_app: &Capture) -> MenuTree<'a, Message, iced::Renderer> {
+fn menu_settings<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
     let root = menu_tree(
         container(text("Settings")
             .style(theme::Text::Color(Color::from_rgb8(255, 255, 255))))
@@ -132,7 +124,7 @@ fn menu_settings<'a>(_app: &Capture) -> MenuTree<'a, Message, iced::Renderer> {
     root
 }
 
-pub fn top_menu(_app: &Capture) -> Column<'_, Message> {
+pub fn top_menu(_app: &App) -> Column<'_, Message> {
     let mb =
         menu_bar!(menu_file(_app), menu_settings(_app))
             .item_width(ItemWidth::Uniform(180))
@@ -161,7 +153,6 @@ pub fn top_menu(_app: &Capture) -> Column<'_, Message> {
 
 
     let c = column![top_bar];
-
 
     c
 }

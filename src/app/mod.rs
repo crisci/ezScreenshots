@@ -1,5 +1,5 @@
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, theme, color, Color};
 use iced::overlay::menu::Menu;
 use iced::theme::Container;
@@ -15,13 +15,20 @@ use crate::custom_widgets::{CustomTheme, image_button};
 use crate::menu::{top_menu};
 use crate::resize::Modal;
 
+use ::image as img;
+use ::image::ColorType;
+use chrono::{Datelike, Timelike};
+use directories::UserDirs;
+use tracing_subscriber::fmt::format;
+
 
 #[derive(Default)]
-pub struct Capture {
+pub struct App {
     screenshot: Option<RgbaImage>,
     resize: bool,
     title: String,
     theme: iced::Theme,
+    save_path: String
 }
 
 #[derive(Debug, Clone)]
@@ -30,18 +37,19 @@ pub enum Message {
     WindowHidden,
     Drop,
     Resize,
-    Debug(String),
+    MenuAction(String),
+    ScreenshotSaved(Result<String, PngError>),
 }
 
 
-impl Application for Capture {
+impl Application for App {
     type Executor = executor::Default;
     type Message = Message;
     type Theme = Theme;
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (Self { screenshot: None, resize: false, title: "".to_string(), theme: Default::default()}, Command::none())
+        (Self { screenshot: None, resize: false, title: "".to_string(), theme: Default::default(), save_path: "./".to_string() }, Command::none())
     }
 
     fn title(&self) -> String {
@@ -51,9 +59,14 @@ impl Application for Capture {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         self.resize = false;
         return match message {
-            Message::Debug(s) => {
-                self.title = s;
-                Command::none()
+            Message::MenuAction(action) => {
+                if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
+                let screenshot = self.screenshot.clone().unwrap();
+                let path = self.save_path.clone();
+                match action.as_str() {
+                    "Save" => Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved),
+                    _ => Command::none()
+                }
             }
             Message::Screenshot => {
                 let change_mode = window::change_mode(window::Mode::Hidden);
@@ -70,6 +83,10 @@ impl Application for Capture {
             },
             Message::Resize => {
                 self.resize = true;
+                Command::none()
+            },
+            Message::ScreenshotSaved(res) => {
+                println!("DONE");
                 Command::none()
             }
         };
@@ -151,9 +168,31 @@ impl Application for Capture {
 
 }
 
-fn screenshot(target: &mut Capture) {
+fn screenshot(target: &mut App) {
     thread::sleep(Duration::from_millis(500));
     let screens = Screen::all().unwrap();
     let image = screens[0].capture().unwrap();
     target.screenshot = Some(image);
+}
+
+#[derive(Clone, Debug)]
+struct PngError(String);
+async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, PngError> {
+    let user_dir = UserDirs::new();
+    let time = chrono::Utc::now();
+    let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
+    let path = format!("{}/SCRN-{}.png", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
+    tokio::task::spawn_blocking(move || {
+        img::save_buffer(
+            &path,
+            &screenshot.clone().into_raw(),
+            screenshot.width(),
+            screenshot.height(),
+            ColorType::Rgba8,
+        )
+            .map(|_| path)
+            .map_err(|err| PngError(format!("{err:?}")))
+    })
+        .await
+        .expect("Blocking task to finish")
 }

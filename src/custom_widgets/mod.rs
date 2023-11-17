@@ -5,7 +5,7 @@ use iced::application::Appearance;
 
 
 use crate::custom_widgets::custom_button::RadiusButton;
-use crate::capture::Message;
+use crate::app::Message;
 
 #[derive(Default)]
 pub struct CustomTheme {}

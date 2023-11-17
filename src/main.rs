@@ -1,11 +1,11 @@
 use iced::Application;
 
-mod capture;
+mod app;
 mod custom_widgets;
 mod resize;
 mod menu;
 
 pub fn main() -> iced::Result {
     tracing_subscriber::fmt::init();
-    capture::Capture::run(iced::Settings::default())
+    app::App::run(iced::Settings::default())
 }
