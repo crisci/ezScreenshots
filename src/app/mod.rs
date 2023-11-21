@@ -1,12 +1,10 @@
-use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, theme, color, Color};
 use iced::overlay::menu::Menu;
 use iced::theme::Container;
-use iced::widget::{container, column, row, text, Button, button, svg, image};
+use iced::widget::{container, column, row, text, Button, button, svg, image, Text, Row};
 use iced::widget::pick_list::mouse_interaction;
 use iced::window::Mode;
-use iced_aw::{CloseCondition, ItemHeight, ItemWidth, menu_bar, PathHighlight};
+use iced_aw::{Card, CloseCondition, ItemHeight, ItemWidth, menu_bar, modal, PathHighlight};
 use screenshots::image::RgbaImage;
 use screenshots::Screen;
 use iced::widget::horizontal_space;
@@ -19,7 +17,9 @@ use ::image as img;
 use ::image::ColorType;
 use chrono::{Datelike, Timelike};
 use directories::UserDirs;
+use iced::alignment::Horizontal;
 use tracing_subscriber::fmt::format;
+use crate::save_as_modal::save_as_modal;
 use crate::utils::*;
 use crate::utils::utils::*;
 
@@ -30,7 +30,14 @@ pub struct App {
     resize: bool,
     title: String,
     theme: iced::Theme,
-    save_path: String
+    save_path: String,
+    save_as_modal: bool
+}
+
+#[derive(Default, Debug)]
+struct State {
+    show_modal: bool,
+    last_message: Option<Message>,
 }
 
 #[derive(Debug, Clone)]
@@ -41,6 +48,10 @@ pub enum Message {
     Resize,
     MenuAction(String),
     ScreenshotSaved(Result<String, ExportError>),
+    CloseSaveAsModal,
+    OpenSaveAsModal,
+    CancelButtonPressed,
+    OkButtonPressed
 }
 
 
@@ -51,7 +62,7 @@ impl Application for App {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (Self { screenshot: None, resize: false, title: "".to_string(), theme: Default::default(), save_path: "./".to_string() }, Command::none())
+        (Self { screenshot: None, resize: false, title: "".to_string(), theme: Default::default(), save_path: "./".to_string(), save_as_modal: false }, Command::none())
     }
 
     fn title(&self) -> String {
@@ -67,6 +78,7 @@ impl Application for App {
                 let path = self.save_path.clone();
                 match action.as_str() {
                     "Save" => Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved),
+                    "Save as..." => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal),
                     _ => Command::none()
                 }
             }
@@ -90,7 +102,12 @@ impl Application for App {
             Message::ScreenshotSaved(res) => {
                 println!("DONE");
                 Command::none()
-            }
+            },
+            Message::OpenSaveAsModal => { self.save_as_modal = true; Command::none() },
+            Message::CloseSaveAsModal => { self.save_as_modal = false; Command::none() },
+            Message::CancelButtonPressed => { self.save_as_modal = false; Command::none() },
+            Message::OkButtonPressed => { self.save_as_modal = false; Command::none() },
+            _ => Command::none()
         };
 
     }
@@ -154,6 +171,12 @@ impl Application for App {
                 .width(Length::FillPortion(1))
                 .center_x()
         ];
+        let overlay = if self.save_as_modal {
+            save_as_modal()
+        } else {
+            None
+        };
+
         let content = column![
             menu,
             container(body).width(Length::Fill)
@@ -162,9 +185,11 @@ impl Application for App {
             .center_x()
 
         ];
-        container(
-           content
-        ).into()
+        modal(container(content), overlay)
+            .backdrop(Message::CloseSaveAsModal)
+            .on_esc(Message::CloseSaveAsModal)
+            .align_y(alignment::Vertical::Center)
+            .into()
     }
 
 

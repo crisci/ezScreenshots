@@ -1,4 +1,3 @@
-
 pub mod utils {
     use std::thread;
     use std::time::Duration;
@@ -20,7 +19,7 @@ pub mod utils {
     pub struct ExportError(String);
 
 
-    pub async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+    pub async fn save_to_png(screenshot: RgbaImage, _path: String) -> Result<String, ExportError> {
         let user_dir = UserDirs::new();
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
@@ -40,7 +39,7 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_jpeg(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+    pub async fn save_to_jpeg(screenshot: RgbaImage, _path: String) -> Result<String, ExportError> {
         let user_dir = UserDirs::new();
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
@@ -60,7 +59,7 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_gif(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+    pub async fn save_to_gif(screenshot: RgbaImage, _path: String) -> Result<String, ExportError> {
         let user_dir = UserDirs::new();
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());

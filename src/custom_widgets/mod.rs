@@ -1,7 +1,9 @@
 mod custom_button;
 
-use iced::{widget::{svg, Container, column, text, container, button}, Renderer, Length, color, Alignment, mouse::Button, theme::Svg, theme, Color, application};
+use iced::{widget::{svg, Container, column, text, container, button}, Renderer, Length, color, Alignment, mouse::Button, theme::Svg, theme, Color, application, Application};
+use iced::alignment::Horizontal;
 use iced::application::Appearance;
+use iced::widget::Text;
 
 
 use crate::custom_widgets::custom_button::RadiusButton;
@@ -25,6 +27,13 @@ impl application::StyleSheet for CustomTheme{
             text_color: Color::WHITE,
         }
     }
+}
+
+pub fn rounded_button<'a>(label: &'a str, message: Message) -> iced::widget::Button<'a, Message> {
+    button(Text::new(label).horizontal_alignment(Horizontal::Center).style(theme::Text::Color(Color::WHITE)))
+        .style(iced::theme::Button::Custom(Box::new(RadiusButton::new(label.to_string()))))
+        .width(Length::Fill)
+        .on_press(message)
 }
 
 pub fn image_button<'a>(image_name: &'a str, description: &'static str, message: Message) -> Container<'a, Message, Renderer> {
