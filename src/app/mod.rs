@@ -38,7 +38,7 @@ pub enum Message {
     Drop,
     Resize,
     MenuAction(String),
-    ScreenshotSaved(Result<String, PngError>),
+    ScreenshotSaved(Result<String, ExportError>),
 }
 
 
@@ -64,7 +64,7 @@ impl Application for App {
                 let screenshot = self.screenshot.clone().unwrap();
                 let path = self.save_path.clone();
                 match action.as_str() {
-                    "Save" => Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved),
+                    "Save" => Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved),
                     _ => Command::none()
                 }
             }
@@ -176,12 +176,13 @@ fn screenshot(target: &mut App) {
 }
 
 #[derive(Clone, Debug)]
-struct PngError(String);
-async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, PngError> {
+struct ExportError(String);
+
+async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
     let user_dir = UserDirs::new();
     let time = chrono::Utc::now();
     let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-    let path = format!("{}/SCRN-{}.png", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
+    let path = format!("{}/SCRN_{}.png", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
     tokio::task::spawn_blocking(move || {
         img::save_buffer(
             &path,
@@ -191,7 +192,47 @@ async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, PngE
             ColorType::Rgba8,
         )
             .map(|_| path)
-            .map_err(|err| PngError(format!("{err:?}")))
+            .map_err(|err| ExportError(format!("{err:?}")))
+    })
+        .await
+        .expect("Blocking task to finish")
+}
+
+async fn save_to_jpeg(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+    let user_dir = UserDirs::new();
+    let time = chrono::Utc::now();
+    let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
+    let path = format!("{}/SCRN_{}.jpeg", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
+    tokio::task::spawn_blocking(move || {
+        img::save_buffer(
+            &path,
+            &screenshot.clone().into_raw(),
+            screenshot.width(),
+            screenshot.height(),
+            ColorType::Rgba8,
+        )
+            .map(|_| path)
+            .map_err(|err| ExportError(format!("{err:?}")))
+    })
+        .await
+        .expect("Blocking task to finish")
+}
+
+async fn save_to_gif(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+    let user_dir = UserDirs::new();
+    let time = chrono::Utc::now();
+    let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
+    let path = format!("{}/SCRN_{}.gif", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
+    tokio::task::spawn_blocking(move || {
+        img::save_buffer(
+            &path,
+            &screenshot.clone().into_raw(),
+            screenshot.width(),
+            screenshot.height(),
+            ColorType::Rgba8,
+        )
+            .map(|_| path)
+            .map_err(|err| ExportError(format!("{err:?}")))
     })
         .await
         .expect("Blocking task to finish")
