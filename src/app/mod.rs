@@ -77,7 +77,7 @@ impl Application for App {
                 let screenshot = self.screenshot.clone().unwrap();
                 let path = self.save_path.clone();
                 match action.as_str() {
-                    "Save" => Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved),
+                    "Save" => Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved),
                     "Save as..." => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal),
                     _ => Command::none()
                 }
