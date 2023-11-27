@@ -10,7 +10,7 @@ iced = {version = "0.10", features = ["svg", "tokio", "image", "advanced", "debu
 tokio = "1.33.0"
 dark-light = "1.0.0"
 tracing-subscriber = "0.3.17"
-iced_aw = { version = "0.7.0", features = [ "menu", "quad", "modal", "card" ] }
+iced_aw = { version = "0.7.0", features = [ "menu", "quad", "modal", "card", "selection_list", "spinner", "icons" ] }
 image = { version = "0.24.7", features = ["png", "gif", "jpeg"] }
 chrono = "0.4.31"
 directories = "5.0.1"

@@ -1,13 +1,12 @@
-use iced::widget::{column, Column, Container};
+use iced::widget::{column, Column};
 use iced::widget::{
-    button, container, horizontal_space, row, svg, text,
+    button, container, horizontal_space, row, text,
 };
-use iced::{alignment, theme, Color, Element, Length, Renderer};
-use iced::theme::Text;
+use iced::{alignment, theme, Color, Element, Length};
 
 use iced_aw::menu::{menu_tree::MenuTree, CloseCondition, ItemHeight, ItemWidth, PathHighlight};
 use iced_aw::{helpers::menu_tree, menu_bar, menu_tree};
-use crate::app::{App, Message};
+use crate::app::{App, MenuAction, Message};
 
 struct ButtonStyle;
 impl button::StyleSheet for ButtonStyle {
@@ -33,6 +32,16 @@ impl button::StyleSheet for ButtonStyle {
     }
 }
 
+fn return_action(label: &str) -> MenuAction {
+    match label.into() {
+        "Save" => MenuAction::Save,
+        "Save as..." => MenuAction::SaveAs,
+        "Settings..." => MenuAction::Settings,
+        "Short keys" => MenuAction::ShortKeys,
+        _ => panic!("Not recognized action")
+    }
+}
+
 fn base_button<'a>(
     content: impl Into<Element<'a, Message, iced::Renderer>>,
     msg: Message,
@@ -54,44 +63,11 @@ fn labeled_button<'a>(label: &str, msg: Message) -> button::Button<'a, Message, 
 }
 
 fn debug_button<'a>(label: &str) -> button::Button<'a, Message, iced::Renderer> {
-    labeled_button(label, Message::MenuAction(label.into()))
+    labeled_button(label, Message::MenuAction(return_action(label)))
 }
 
 fn debug_item<'a>(label: &str) -> MenuTree<'a, Message, iced::Renderer> {
     menu_tree!(debug_button(label).width(Length::Fill).height(Length::Fill))
-}
-
-fn sub_menu<'a>(label: &str, msg: Message, children: Vec<MenuTree<'a, Message, iced::Renderer>>, ) -> MenuTree<'a, Message, iced::Renderer> {
-    let handle = svg::Handle::from_path(format!(
-        "{}/resources/caret-right-fill.svg",
-        env!("CARGO_MANIFEST_DIR")
-    ));
-    let arrow = svg(handle)
-        .width(Length::Shrink)
-        .style(theme::Svg::custom_fn(|theme| svg::Appearance {
-            color: Some(theme.extended_palette().background.base.text),
-        }));
-
-    menu_tree(
-        base_button(
-            row![
-                text(label)
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .vertical_alignment(alignment::Vertical::Center),
-                arrow
-            ]
-                .align_items(iced::Alignment::Center),
-            msg,
-        )
-            .width(Length::Fill)
-            .height(Length::Fill),
-        children,
-    )
-}
-
-fn debug_sub_menu<'a>(label: &str, children: Vec<MenuTree<'a, Message, iced::Renderer>>, ) -> MenuTree<'a, Message, iced::Renderer> {
-    sub_menu(label, Message::MenuAction(label.into()), children)
 }
 
 fn menu_file<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {

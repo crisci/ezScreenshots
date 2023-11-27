@@ -1,6 +1,6 @@
 mod custom_button;
 
-use iced::{widget::{svg, Container, column, text, container, button}, Renderer, Length, color, Alignment, mouse::Button, theme::Svg, theme, Color, application, Application};
+use iced::{widget::{svg, Container, column, text, container, button}, Renderer, Length, color, Alignment, theme, Color, application};
 use iced::alignment::Horizontal;
 use iced::application::Appearance;
 use iced::widget::Text;
