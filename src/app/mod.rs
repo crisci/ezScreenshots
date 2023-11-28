@@ -1,4 +1,4 @@
-use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme};
+use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::window::Mode;
 use iced_aw::{ modal };
@@ -13,6 +13,12 @@ use crate::app::SaveState::{Nothing, OnGoing};
 use crate::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
 
+use iced::keyboard;
+use iced_native::subscription;
+use iced_native::Event;
+use crate::app::MenuAction::{Save, SaveAs};
+use crate::settings_modal::settings_modal;
+
 
 #[derive(Default)]
 pub struct App {
@@ -25,6 +31,9 @@ pub struct App {
     formats: Vec<String>,
     export_format: Formats,
     manual_select: Option<usize>,
+    //Settings
+    settings_modal: bool,
+    delay_time: f32
 
 }
 
@@ -44,7 +53,7 @@ impl App {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MenuAction {
     SaveAs,
     Save,
@@ -68,12 +77,14 @@ pub enum Message {
     Resize,
     MenuAction(MenuAction),
     ScreenshotSaved(Result<String, ExportError>),
-    CloseSaveAsModal,
+    CloseModal,
     OpenSaveAsModal,
+    OpenSettingsModal,
     CancelButtonPressed,
     SaveAsButtonPressed,
     FormatSelected(usize, String),
-    Init
+    Init,
+    DelayChanged(f32)
 }
 
 
@@ -90,7 +101,7 @@ impl Application for App {
         for i in Formats::ALL.iter() {
             vec.push(format!("{i}"))
         }
-        (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0) },
+        (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0. },
          Command::none())
     }
 
@@ -109,15 +120,16 @@ impl Application for App {
                 Command::none()
             },
             Message::MenuAction(action) => {
-                if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
-                let screenshot = self.screenshot.clone().unwrap();
-                let path = self.save_path.clone();
+                if self.screenshot.is_none() && action != MenuAction::Settings {println!("Screenshot not available"); return Command::none()};
                 match action {
                     MenuAction::Save => {
+                        let path = self.save_path.clone();
+                        let screenshot = self.screenshot.clone().unwrap();
                         self.save_state = OnGoing;
                         Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
                     },
                     MenuAction::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
+                    MenuAction::Settings => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSettingsModal ),
                     _ => Command::none()
                 }
             },
@@ -144,9 +156,10 @@ impl Application for App {
                 self.save_state = SaveState::Done;
                 Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init)
             },
-            Message::OpenSaveAsModal => { self.save_as_modal = true; Command::none() },
-            Message::CloseSaveAsModal => { self.save_as_modal = false; Command::none() },
-            Message::CancelButtonPressed => { self.save_as_modal = false; Command::none() },
+            Message::OpenSaveAsModal => { self.settings_modal = false; self.save_as_modal = true; Command::none() },
+            Message::OpenSettingsModal => { self.save_as_modal = false; self.settings_modal = true; Command::none() }
+            Message::CloseModal => { self.save_as_modal = false; self.settings_modal = false; Command::none() },
+            Message::CancelButtonPressed => { self.save_as_modal = false; self.settings_modal = false; Command::none() },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
@@ -159,10 +172,10 @@ impl Application for App {
                 }
             },
             Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
+            _ => Command::none()
         };
 
     }
-
     fn view(&self) ->  Element<'_, Self::Message, Renderer<Self::Theme>> {
         let menu = top_menu(self);
         let image: Element<Message> = if let Some(screenshot) = &self.screenshot
@@ -237,9 +250,9 @@ impl Application for App {
 
         let overlay = if self.save_as_modal {
             save_as_modal(&self)
-        } else {
-            None
-        };
+        } else if self.settings_modal {
+            settings_modal(&self)
+        } else { None };
 
         let content = column![
             menu,
@@ -250,12 +263,11 @@ impl Application for App {
 
         ];
         modal(container(content), overlay)
-            .backdrop(Message::CloseSaveAsModal)
-            .on_esc(Message::CloseSaveAsModal)
+            .backdrop(Message::CloseModal)
+            .on_esc(Message::CloseModal)
             .align_y(alignment::Vertical::Center)
             .into()
     }
-
 
 }
 

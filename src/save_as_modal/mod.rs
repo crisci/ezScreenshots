@@ -94,6 +94,6 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                 )
                 .max_width(300.0)
                 //.width(Length::Shrink)
-                .on_close(Message::CloseSaveAsModal),
+                .on_close(Message::CloseModal),
         )
 }
