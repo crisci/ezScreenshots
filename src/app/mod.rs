@@ -33,7 +33,8 @@ pub struct App {
     manual_select: Option<usize>,
     //Settings
     settings_modal: bool,
-    delay_time: f32
+    delay_time: f32,
+    temp: f32
 
 }
 
@@ -49,6 +50,10 @@ impl App {
     pub(crate) fn save_state(&self) -> SaveState {
         self.save_state.clone()
     }
+
+    pub(crate) fn delay_time(&self) -> f32 { self.delay_time }
+
+    pub(crate) fn temp(&self) -> f32  { self.temp }
 
 }
 
@@ -84,7 +89,8 @@ pub enum Message {
     SaveAsButtonPressed,
     FormatSelected(usize, String),
     Init,
-    DelayChanged(f32)
+    DelayChanged(f32),
+    SettingSave
 }
 
 
@@ -101,7 +107,7 @@ impl Application for App {
         for i in Formats::ALL.iter() {
             vec.push(format!("{i}"))
         }
-        (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0. },
+        (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0., temp: 0.0 },
          Command::none())
     }
 
@@ -129,7 +135,9 @@ impl Application for App {
                         Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
                     },
                     MenuAction::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
-                    MenuAction::Settings => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSettingsModal ),
+                    MenuAction::Settings => {
+                        self.temp = self.delay_time;
+                        Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenSettingsModal) },
                     _ => Command::none()
                 }
             },
@@ -172,7 +180,8 @@ impl Application for App {
                 }
             },
             Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
-            _ => Command::none()
+            Message::DelayChanged(value) => {self.temp = value; Command::none()}
+            Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() }
         };
 
     }
