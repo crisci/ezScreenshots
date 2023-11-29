@@ -10,7 +10,7 @@ pub mod utils {
     use crate::app::App;
 
     pub fn screenshot(target: &mut App) {
-        thread::sleep(Duration::from_millis(500));
+        thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
         let screens = Screen::all().unwrap();
         let image = screens[0].capture().unwrap();
         target.screenshot = Some(image);

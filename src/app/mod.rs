@@ -55,6 +55,7 @@ impl App {
 
     pub(crate) fn temp(&self) -> f32  { self.temp }
 
+
 }
 
 
@@ -66,7 +67,7 @@ pub enum MenuAction {
     ShortKeys
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub enum SaveState {
     #[default]
     Nothing,
@@ -217,7 +218,7 @@ impl Application for App {
         }
 
         let image_container = container(
-            image.padding(10)
+            image.padding(5)
         ).center_x().center_y()
             .width(Length::Fill)
             .height(Length::Fill)
@@ -235,7 +236,7 @@ impl Application for App {
                 button_row = row![drag_button].push(button_row).push(delete_button).spacing(10);
         }
 
-        let bottom_container = Row::new()
+        let mut bottom_container = Row::new()
             .push(match self.save_state {
                 OnGoing => container(Spinner::new())
                     .width(Length::Fill)
@@ -244,6 +245,19 @@ impl Application for App {
                 SaveState::Done => container(text("Screenshot saved correctly!")),
                 _ => container(button_row)
             });
+        if self.delay_time > 0. && self.save_state != OnGoing {
+            let delay_handle = svg::Handle::from_path(format!(
+                "{}/resources/{}.svg",
+                env!("CARGO_MANIFEST_DIR"),
+                "delay"
+            ));
+
+            let delay_svg = svg(delay_handle)
+                .height(30)
+                .width(30)
+                .content_fit(ContentFit::Contain);
+            bottom_container = bottom_container.push(container(delay_svg).height(55).width(55).padding(15).center_x().center_y());
+        }
 
         let body = column![
             image_container
@@ -267,7 +281,7 @@ impl Application for App {
             menu,
             container(body).width(Length::Fill)
             .height(Length::Fill)
-            .padding(10)
+            .padding(5)
             .center_x()
 
         ];
