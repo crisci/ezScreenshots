@@ -28,7 +28,7 @@ impl button::StyleSheet for RadiusButton {
 
 fn screenshot_theme() -> Appearance {
     Appearance {
-        border_radius: 18.0.into(),
+        border_radius: 30.0.into(),
         background: Option::from(iced::Background::Color(Color::from(color!(0x364F6B)))),
         ..Appearance::default()
     }

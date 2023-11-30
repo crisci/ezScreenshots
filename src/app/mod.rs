@@ -1,4 +1,4 @@
-use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
+use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::window::Mode;
 use iced_aw::{ modal };
@@ -13,10 +13,6 @@ use crate::app::SaveState::{Nothing, OnGoing};
 use crate::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
 
-use iced::keyboard;
-use iced_native::subscription;
-use iced_native::Event;
-use crate::app::MenuAction::{Save, SaveAs};
 use crate::settings_modal::settings_modal;
 
 

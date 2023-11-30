@@ -1,10 +1,7 @@
-use std::fmt::{Display, Formatter};
-use iced::alignment::Horizontal::Center;
-use iced::{Alignment, Font, Length};
-use iced::widget::{Column, container, Row, Text};
-use iced_aw::{Card, number_input, NumberInputStyles, SelectionList, SelectionListStyles};
-use iced_aw::native::Spinner;
-use crate::app::{App, Message, SaveState};
+use iced::{Alignment, Length};
+use iced::widget::{Row, Text};
+use iced_aw::{Card, number_input, NumberInputStyles};
+use crate::app::{App, Message};
 use crate::custom_widgets::rounded_button;
 
 pub fn settings_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {

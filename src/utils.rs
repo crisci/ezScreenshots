@@ -4,7 +4,6 @@ pub mod utils {
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
-    use iced::Command;
     use image::{ColorType, RgbaImage};
     use screenshots::Screen;
     use crate::app::App;
