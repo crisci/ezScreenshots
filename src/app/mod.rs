@@ -22,7 +22,7 @@ pub struct App {
     resize: bool,
     save_path: String,
     save_state: SaveState,
-    //Needed for save as section
+    //Save as
     save_as_modal: bool,
     formats: Vec<String>,
     export_format: Formats,
