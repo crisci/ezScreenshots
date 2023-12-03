@@ -15,7 +15,7 @@ use crate::utils::utils::*;
 
 use crate::settings_modal::settings_modal;
 
-
+//lorenzo
 #[derive(Default)]
 pub struct App {
     pub(crate) screenshot: Option<RgbaImage>,
