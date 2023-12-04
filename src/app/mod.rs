@@ -15,7 +15,6 @@ use crate::utils::utils::*;
 
 use crate::settings_modal::settings_modal;
 
-//lorenzo
 #[derive(Default)]
 pub struct App {
     pub(crate) screenshot: Option<RgbaImage>,
@@ -229,7 +228,8 @@ impl Application for App {
         if self.screenshot.is_some() {
             let drag_button = image_button("drag", "Resize", Message::Resize);
             let delete_button = image_button("delete", "Delete", Message::Drop);
-                button_row = row![drag_button].push(button_row).push(delete_button).spacing(10);
+            let save_button = image_button("save","Save", Message::OpenSaveAsModal);
+                button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).spacing(10);
         }
 
         let mut bottom_container = Row::new()
