@@ -1,5 +1,7 @@
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme};
+use iced::advanced::Widget;
 use iced::widget::{container, column, row, text, svg, image, Row};
+use iced::widget::space::Space;
 use iced::window::Mode;
 use iced_aw::{ modal };
 use screenshots::image::RgbaImage;
@@ -229,7 +231,7 @@ impl Application for App {
             let drag_button = image_button("drag", "Resize", Message::Resize);
             let delete_button = image_button("delete", "Delete", Message::Drop);
             let save_button = image_button("save","Save", Message::OpenSaveAsModal);
-                button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).spacing(10);
+                button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).push(Space::new(55,55)).spacing(10);
         }
 
         let mut bottom_container = Row::new()
