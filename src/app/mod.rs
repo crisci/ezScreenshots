@@ -94,7 +94,7 @@ pub enum Message {
     Init,
     DelayChanged(f32),
     SettingSave,
-    ButtonPressed(char)
+    KeyboardComb(char)
 }
 
 
@@ -186,7 +186,7 @@ impl Application for App {
             Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
             Message::DelayChanged(value) => {self.temp = value; Command::none()}
             Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() },
-            Message::ButtonPressed(event)  => {
+            Message::KeyboardComb(event)  => {
                 println!("{:?}", event);
                 Command::none()
             }
@@ -302,7 +302,7 @@ impl Application for App {
     fn subscription(&self) -> Subscription<Self::Message> {
         events_with(|event, _status| match event {
             Event::Keyboard(keyboard_event) => match keyboard_event {
-                keyboard::Event::CharacterReceived(c) => Some(Message::ButtonPressed(c)),
+                keyboard::Event::CharacterReceived(c) => Some(Message::KeyboardComb(c)),
                 _ => None
             },
             _ => None
