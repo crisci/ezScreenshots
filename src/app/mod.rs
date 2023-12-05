@@ -222,17 +222,14 @@ impl Application for App {
             .center_y();
 
         let screenshot_button = image_button("screenshot", "Screenshot", Message::Screenshot);
-        let mut button_row = row![
-                screenshot_button
-            ].spacing(10).align_items(Alignment::Center);
-
-        if self.screenshot.is_some() {
-            let drag_button = image_button("drag", "Resize", Message::Resize);
-            let delete_button = image_button("delete", "Delete", Message::Drop);
-            let save_button = image_button("save","Save", Message::MenuAction(MenuAction::Save));
-                button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).spacing(10);
-        }
-
+        let drag_button = image_button("drag", "Resize", Message::Resize);
+        let delete_button = image_button("delete", "Delete", Message::Drop);
+        let save_button = image_button("save", "Save", Message::MenuAction(MenuAction::Save));
+        let button_row = if self.screenshot.is_some() {
+            row![drag_button].push(delete_button).push(screenshot_button).push(save_button).spacing(10).align_items(Alignment::Center)
+        } else {
+            row![Space::new(55, 55)].push(screenshot_button).spacing(10).align_items(Alignment::Center)
+        };
         let mut bottom_container = Row::new()
             .push(match self.save_state {
                 OnGoing => container(Spinner::new())
@@ -255,7 +252,7 @@ impl Application for App {
                 .content_fit(ContentFit::Contain);
             bottom_container = bottom_container.push(container(delay_svg).height(55).width(55).padding(15).center_x().center_y());
         } else {
-            bottom_container = bottom_container.push(container(Space::new(55, 55)).height(55).width(55).padding(15).center_x().center_y());
+            bottom_container = bottom_container.push(Space::new(55, 55)).spacing(10).align_items(Alignment::Center);
         }
 
         let body = column![
