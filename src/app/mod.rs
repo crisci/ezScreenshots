@@ -1,3 +1,4 @@
+use iced::subscription::events;
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::window::Mode;
@@ -13,11 +14,12 @@ use crate::app::SaveState::{Nothing, OnGoing};
 use crate::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
 
-use iced::keyboard;
+use iced::keyboard::{self, KeyCode, Modifiers};
 use iced_native::subscription;
-use iced_native::Event;
 use crate::app::MenuAction::{Save, SaveAs};
 use crate::settings_modal::settings_modal;
+
+use iced::event::{self, Event};
 
 
 #[derive(Default)]
@@ -91,7 +93,8 @@ pub enum Message {
     FormatSelected(usize, String),
     Init,
     DelayChanged(f32),
-    SettingSave
+    SettingSave,
+    ButtonPressed(Event)
 }
 
 
@@ -182,7 +185,16 @@ impl Application for App {
             },
             Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
             Message::DelayChanged(value) => {self.temp = value; Command::none()}
-            Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() }
+            Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() },
+            Message::ButtonPressed(event)  => {
+                if let Event::Keyboard(e) = event {
+                    //CTRL + S
+                    if e == keyboard::Event::CharacterReceived('\u{13}') {
+                        println!("DONE")
+                    }
+                };
+                Command::none()
+            }
         };
 
     }
@@ -290,6 +302,10 @@ impl Application for App {
             .on_esc(Message::CloseModal)
             .align_y(alignment::Vertical::Center)
             .into()
+    }
+
+    fn subscription(&self) -> Subscription<Self::Message> {
+        events().map(Message::ButtonPressed)
     }
 
 }
