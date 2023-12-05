@@ -228,7 +228,7 @@ impl Application for App {
         let button_row = if self.screenshot.is_some() {
             row![drag_button].push(delete_button).push(screenshot_button).push(save_button).spacing(10).align_items(Alignment::Center)
         } else {
-            row![Space::new(55, 55)].push(Space::new(55, 55)).push(screenshot_button).push(Space::new(55, 55)).spacing(10).align_items(Alignment::Center)
+            row![Space::new(55, 55)].push(screenshot_button).spacing(10).align_items(Alignment::Center)
         };
         let mut bottom_container = Row::new()
             .push(match self.save_state {
@@ -252,7 +252,7 @@ impl Application for App {
                 .content_fit(ContentFit::Contain);
             bottom_container = bottom_container.push(container(delay_svg).height(55).width(55).padding(15).center_x().center_y());
         } else {
-            bottom_container = bottom_container.push(Space::new(55, 55));
+            bottom_container = bottom_container.push(Space::new(55, 55)).spacing(10).align_items(Alignment::Center);
         }
 
         let body = column![
