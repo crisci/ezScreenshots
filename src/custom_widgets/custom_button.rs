@@ -52,7 +52,7 @@ fn resize_theme() -> Appearance {
 
 fn save_theme() -> Appearance {
     Appearance {
-        border_radius:15.0.into(),
+        border_radius:100.0.into(),
         background: Option::from(iced::Background::Color(Color::from(color!(0x64BF45)))),
         ..Appearance::default()
     }
@@ -60,7 +60,7 @@ fn save_theme() -> Appearance {
 
 fn cancel_theme() -> Appearance {
     Appearance {
-        border_radius:15.0.into(),
+        border_radius:100.0.into(),
         background: Option::from(iced::Background::Color(Color::from(color!(0xF90851)))),
         ..Appearance::default()
     }
