@@ -229,7 +229,7 @@ impl Application for App {
         if self.screenshot.is_some() {
             let drag_button = image_button("drag", "Resize", Message::Resize);
             let delete_button = image_button("delete", "Delete", Message::Drop);
-            let save_button = image_button("save","Save", Message::OpenSaveAsModal);
+            let save_button = image_button("save","Save", Message::MenuAction(MenuAction::Save));
                 button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).spacing(10);
         }
 
