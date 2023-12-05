@@ -1,5 +1,4 @@
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme};
-use iced::advanced::Widget;
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::widget::space::Space;
 use iced::window::Mode;
