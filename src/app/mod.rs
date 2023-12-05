@@ -189,8 +189,9 @@ impl Application for App {
             Message::ButtonPressed(event)  => {
                 if let Event::Keyboard(e) = event {
                     //CTRL + S
-                    if e == keyboard::Event::CharacterReceived('\u{13}') {
-                        println!("DONE")
+                    // !! It is an enum so you can apply a match
+                    if let keyboard::Event::CharacterReceived(comb) = e {
+                        println!("{:?}", comb)
                     }
                 };
                 Command::none()
