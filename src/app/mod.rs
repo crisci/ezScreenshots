@@ -1,5 +1,6 @@
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme};
 use iced::widget::{container, column, row, text, svg, image, Row};
+use iced::widget::space::Space;
 use iced::window::Mode;
 use iced_aw::{ modal };
 use screenshots::image::RgbaImage;
@@ -14,7 +15,6 @@ use crate::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
 
 use crate::settings_modal::settings_modal;
-
 
 #[derive(Default)]
 pub struct App {
@@ -229,7 +229,8 @@ impl Application for App {
         if self.screenshot.is_some() {
             let drag_button = image_button("drag", "Resize", Message::Resize);
             let delete_button = image_button("delete", "Delete", Message::Drop);
-                button_row = row![drag_button].push(button_row).push(delete_button).spacing(10);
+            let save_button = image_button("save","Save", Message::MenuAction(MenuAction::Save));
+                button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).spacing(10);
         }
 
         let mut bottom_container = Row::new()
@@ -253,6 +254,8 @@ impl Application for App {
                 .width(30)
                 .content_fit(ContentFit::Contain);
             bottom_container = bottom_container.push(container(delay_svg).height(55).width(55).padding(15).center_x().center_y());
+        } else {
+            bottom_container = bottom_container.push(container(Space::new(55, 55)).height(55).width(55).padding(15).center_x().center_y());
         }
 
         let body = column![
