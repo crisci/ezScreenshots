@@ -1,4 +1,4 @@
-use iced::subscription::events;
+use iced::subscription::{events, events_with};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::window::Mode;
@@ -94,7 +94,7 @@ pub enum Message {
     Init,
     DelayChanged(f32),
     SettingSave,
-    ButtonPressed(Event)
+    ButtonPressed(char)
 }
 
 
@@ -187,13 +187,7 @@ impl Application for App {
             Message::DelayChanged(value) => {self.temp = value; Command::none()}
             Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() },
             Message::ButtonPressed(event)  => {
-                if let Event::Keyboard(e) = event {
-                    //CTRL + S
-                    // !! It is an enum so you can apply a match
-                    if let keyboard::Event::CharacterReceived(comb) = e {
-                        println!("{:?}", comb)
-                    }
-                };
+                println!("{:?}", event);
                 Command::none()
             }
         };
@@ -306,7 +300,13 @@ impl Application for App {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        events().map(Message::ButtonPressed)
+        events_with(|event, _status| match event {
+            Event::Keyboard(keyboard_event) => match keyboard_event {
+                keyboard::Event::CharacterReceived(c) => Some(Message::ButtonPressed(c)),
+                _ => None
+            },
+            _ => None
+        })
     }
 
 }
