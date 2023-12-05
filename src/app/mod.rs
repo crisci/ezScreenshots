@@ -231,7 +231,7 @@ impl Application for App {
             let drag_button = image_button("drag", "Resize", Message::Resize);
             let delete_button = image_button("delete", "Delete", Message::Drop);
             let save_button = image_button("save","Save", Message::OpenSaveAsModal);
-                button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).push(Space::new(55,55)).spacing(10);
+                button_row = row![drag_button].push(delete_button).push(button_row).push(save_button).spacing(10);
         }
 
         let mut bottom_container = Row::new()
@@ -255,6 +255,8 @@ impl Application for App {
                 .width(30)
                 .content_fit(ContentFit::Contain);
             bottom_container = bottom_container.push(container(delay_svg).height(55).width(55).padding(15).center_x().center_y());
+        } else {
+            bottom_container = bottom_container.push(container(Space::new(55, 55)).height(55).width(55).padding(15).center_x().center_y());
         }
 
         let body = column![
