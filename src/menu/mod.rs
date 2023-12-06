@@ -89,7 +89,7 @@ fn menu_file<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
 
 fn menu_settings<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
     let root = menu_tree(
-        container(text("Settings")
+        container(text("Advanced")
             .style(theme::Text::Color(Color::from_rgb8(255, 255, 255))))
             .padding([0, 2, 0, 2]),
         vec![
