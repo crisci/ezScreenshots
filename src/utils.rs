@@ -4,11 +4,9 @@ pub mod utils {
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
-    use iced::Command;
     use image::{ColorType, RgbaImage};
     use screenshots::Screen;
-    use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
-    use crate::app::{Message, MenuAction};
+    use crate::{app::App};
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));

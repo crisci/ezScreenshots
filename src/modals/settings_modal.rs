@@ -1,13 +1,10 @@
-use std::fmt::{Display, Formatter};
-use iced::alignment::Horizontal::Center;
-use iced::{Alignment, Font, Length};
-use iced::widget::{Column, container, Row, Text};
-use iced_aw::{Card, number_input, NumberInputStyles, SelectionList, SelectionListStyles};
-use iced_aw::native::Spinner;
-use crate::app::{App, Message, SaveState};
+use iced::{Alignment, Length};
+use iced::widget::{Row, Text};
+use iced_aw::{Card, number_input, NumberInputStyles};
+use crate::app::{App, Message};
 use crate::custom_widgets::rounded_button;
 
-pub fn settings_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
+pub fn settings_modal(app: &App) -> Option<Card<Message>> {
     let txt_seconds = number_input(app.temp(), 100., Message::DelayChanged)
         .style(NumberInputStyles::Default)
         .step(1.);
@@ -28,7 +25,7 @@ pub fn settings_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                         .padding(5)
                         .width(Length::Fill)
                         .push(
-                            rounded_button("Cancel", Message::CancelButtonPressed)
+                            rounded_button("Cancel", Message::CloseModal)
                         )
                         .push(
                             rounded_button("Save", Message::SettingSave)

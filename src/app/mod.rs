@@ -1,4 +1,4 @@
-use iced::subscription::{events, events_with};
+use iced::subscription::{events_with};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::window::Mode;
@@ -7,22 +7,20 @@ use screenshots::image::RgbaImage;
 use iced_aw::native::Spinner;
 
 use crate::custom_widgets::{image_button};
-use crate::hotkeys;
-use crate::hotkeys::hotkeys_logic::Hotkeys;
+use crate::hotkeys::hotkeys_logic::{Hotkeys, HotkeysMap};
 use crate::menu::{top_menu};
 use crate::resize::Modal;
 
 use crate::app::SaveState::{Nothing, OnGoing};
-use crate::save_as_modal::{Formats, save_as_modal};
+use crate::modals::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
 
-use iced::keyboard::{self, KeyCode, Modifiers};
-use iced_native::subscription;
-use crate::app::MenuAction::{Save, SaveAs};
-use crate::settings_modal::settings_modal;
+use iced::keyboard::{self};
+use crate::modals::settings_modal::settings_modal;
 
-use iced::event::{self, Event};
+use iced::event::{Event};
 use crate::modals::hotkeys_modal::hotkeys_modal;
+use crate::modals::Modals;
 
 
 #[derive(Default)]
@@ -32,17 +30,17 @@ pub struct App {
     save_path: String,
     save_state: SaveState,
     //Needed for save as section
-    save_as_modal: bool,
     formats: Vec<String>,
     export_format: Formats,
     manual_select: Option<usize>,
     //Settings
-    settings_modal: bool,
     delay_time: f32,
     temp: f32,
     //Hotkeys
     hotkeys: Hotkeys,
-    hotkeys_modal: bool
+    _hotkeys_modification: HotkeysMap,
+    // Modal to be shown
+    modal: Modals
 }
 
 impl App {
@@ -62,19 +60,8 @@ impl App {
 
     pub(crate) fn temp(&self) -> f32  { self.temp }
 
-    pub(crate) fn get_screenshot(&self) -> char {
-        self.hotkeys.get_screenshot()
-    }
 }
 
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum MenuAction {
-    SaveAs,
-    Save,
-    Settings,
-    Hotkeys
-}
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub enum SaveState {
@@ -90,12 +77,11 @@ pub enum Message {
     WindowHidden,
     Drop,
     Resize,
-    MenuAction(MenuAction),
+    MenuAction(Modals),
     ScreenshotSaved(Result<String, ExportError>),
     CloseModal,
     OpenSaveAsModal,
     OpenSettingsModal,
-    CancelButtonPressed,
     SaveAsButtonPressed,
     FormatSelected(usize, String),
     Init,
@@ -120,7 +106,20 @@ impl Application for App {
         for i in Formats::ALL.iter() {
             vec.push(format!("{i}"))
         }
-                    (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0., temp: 0.0, hotkeys: Hotkeys::new(), hotkeys_modal: false },
+                    (Self {
+                        screenshot: None,
+                        resize: false,
+                        save_path: "./".to_string(),
+                        save_state: SaveState::Nothing,
+                        formats: vec,
+                        export_format: Formats::Png,
+                        manual_select: Some(0),
+                        delay_time: 0.,
+                        temp: 0.0,
+                        hotkeys: Hotkeys::new(),
+                        _hotkeys_modification: HotkeysMap::Save,
+                        modal: Modals::None
+                    },
                      Command::none())
     }
 
@@ -133,25 +132,25 @@ impl Application for App {
         return match message {
             Message::Init => {
                 self.manual_select = Some(0);
-                self.save_as_modal = false;
+                self.modal = Modals::None;
                 self.export_format = Formats::Png;
                 self.save_state = Nothing;
                 Command::none()
             },
             Message::MenuAction(action) => {
-                if self.screenshot.is_none() && action != MenuAction::Settings && action != MenuAction::Hotkeys {println!("Screenshot not available"); return Command::none()};
+                if self.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys {println!("Screenshot not available"); return Command::none()};
                 match action {
-                    MenuAction::Save => {
+                    Modals::Save => {
                         let path = self.save_path.clone();
                         let screenshot = self.screenshot.clone().unwrap();
                         self.save_state = OnGoing;
                         Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
                     },
-                    MenuAction::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
-                    MenuAction::Settings => {
+                    Modals::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
+                    Modals::Settings => {
                         self.temp = self.delay_time;
                         Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenSettingsModal) },
-                    MenuAction::Hotkeys => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenHotkeysModal ),
+                    Modals::Hotkeys => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenHotkeysModal ),
                     _ => Command::none()
                 }
             },
@@ -178,11 +177,10 @@ impl Application for App {
                 self.save_state = SaveState::Done;
                 Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init)
             },
-            Message::OpenSaveAsModal => { self.settings_modal = false; self.hotkeys_modal = false; self.save_as_modal = true; Command::none() },
-            Message::OpenSettingsModal => { self.save_as_modal = false; self.hotkeys_modal = false; self.settings_modal = true; Command::none() },
-            Message::OpenHotkeysModal => { self.settings_modal = false; self.save_as_modal = false; self.hotkeys_modal = true; Command::none()}
-            Message::CloseModal => { self.save_as_modal = false; self.settings_modal = false; self.hotkeys_modal = false; Command::none() },
-            Message::CancelButtonPressed => { self.save_as_modal = false; self.settings_modal = false; self.hotkeys_modal = false; Command::none() },
+            Message::OpenSaveAsModal => { self.modal = Modals::SaveAs; Command::none() },
+            Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
+            Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()}
+            Message::CloseModal => { self.modal = Modals::None; Command::none() },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
@@ -196,7 +194,7 @@ impl Application for App {
             },
             Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
             Message::DelayChanged(value) => {self.temp = value; Command::none()}
-            Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() },
+            Message::SettingSave => { self.delay_time = self.temp; self.modal = Modals::None; Command::none() },
             Message::KeyboardComb(event)  => {
                 if let Some(m) = self.hotkeys.to_message(event) {
                     println!("{:?}", m);
@@ -293,13 +291,12 @@ impl Application for App {
                 .center_x()
         ];
 
-        let overlay = if self.save_as_modal {
-            save_as_modal(&self)
-        } else if self.settings_modal {
-            settings_modal(&self)
-        } else if self.hotkeys_modal {
-            hotkeys_modal(&self)
-        }else { None };
+        let overlay = match self.modal {
+            Modals::Hotkeys => hotkeys_modal(&self),
+            Modals::SaveAs => save_as_modal(&self),
+            Modals::Settings => settings_modal(&self),
+            _ => None
+        };
 
         let content = column![
             menu,

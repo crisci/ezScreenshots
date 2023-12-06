@@ -1,11 +1,10 @@
-use std::fmt::{Display};
 use iced::{Alignment, Length};
 use iced::widget::{Column, Row, Text};
 use iced_aw::{Card};
 use crate::app::{App, Message};
 use crate::custom_widgets::rounded_button;
 
-pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
+pub fn hotkeys_modal(_app: &App) -> Option<Card<Message>> {
     let foot_row = Row::new()
         .spacing(10)
         .padding(5)
@@ -21,7 +20,7 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
                 .foot(
                    foot_row
                             .push(
-                                rounded_button("Cancel", Message::CancelButtonPressed)
+                                rounded_button("Cancel", Message::CloseModal)
                             )
                             .push(
                                 rounded_button("Save", Message::CloseModal)

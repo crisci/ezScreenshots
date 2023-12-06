@@ -80,7 +80,7 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     match app.save_state() {
                         SaveState::Nothing => foot_row
                             .push(
-                                rounded_button("Cancel", Message::CancelButtonPressed)
+                                rounded_button("Cancel", Message::CloseModal)
                             )
                             .push(
                                 rounded_button("Save", Message::SaveAsButtonPressed)
