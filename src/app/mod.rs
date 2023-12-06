@@ -193,10 +193,12 @@ impl Application for App {
             Message::DelayChanged(value) => {self.temp = value; Command::none()}
             Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() },
             Message::KeyboardComb(event)  => {
-                if let Some(c) = self.hotkeys.to_message(event) {
-                    println!("{:?}", c);
+                if let Some(m) = self.hotkeys.to_message(event) {
+                    println!("{:?}", m);
+                    return Command::perform(async {}, |_| {m});
+                } else {
+                    return Command::none();
                 }
-                Command::none()
             }
         };
 
