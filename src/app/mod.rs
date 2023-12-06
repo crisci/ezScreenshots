@@ -26,7 +26,7 @@ use crate::modals::Modals;
 
 #[derive(Default)]
 pub struct App {
-    pub(crate) screenshot: Option<RgbaImage>,
+    screenshot: Option<RgbaImage>,
     resize: bool,
     save_path: String,
     save_state: SaveState,
@@ -60,6 +60,14 @@ impl App {
     pub(crate) fn delay_time(&self) -> f32 { self.delay_time }
 
     pub(crate) fn temp(&self) -> f32  { self.temp }
+
+    pub(crate) fn hotkeys(&self) -> Hotkeys {
+        self.hotkeys.clone()
+    }
+
+    pub(crate) fn set_screenshot(&mut self, screenshot: Option<RgbaImage>) {
+        self.screenshot = screenshot
+    }
 
 }
 

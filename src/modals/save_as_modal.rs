@@ -49,7 +49,7 @@ impl Display for Formats {
     }
 }
 
-pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
+pub fn save_as_modal(app: &App) -> Option<Card<Message>> {
     let selection_list: SelectionList<_, Message> = SelectionList::new_with(
         &app.formats()[..],
         Message::FormatSelected,
