@@ -7,6 +7,7 @@ use screenshots::image::RgbaImage;
 use iced_aw::native::Spinner;
 
 use crate::custom_widgets::{image_button};
+use crate::hotkeys::hotkeys_logic::Hotkeys;
 use crate::menu::{top_menu};
 use crate::resize::Modal;
 
@@ -36,8 +37,9 @@ pub struct App {
     //Settings
     settings_modal: bool,
     delay_time: f32,
-    temp: f32
-
+    temp: f32,
+    //Hotkeys
+    hotkeys: Hotkeys
 }
 
 impl App {
@@ -111,7 +113,7 @@ impl Application for App {
         for i in Formats::ALL.iter() {
             vec.push(format!("{i}"))
         }
-        (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0., temp: 0.0 },
+                    (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0., temp: 0.0, hotkeys: Hotkeys::new()  },
          Command::none())
     }
 
