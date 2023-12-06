@@ -6,7 +6,8 @@ use iced::{alignment, theme, Color, Element, Length};
 
 use iced_aw::menu::{menu_tree::MenuTree, CloseCondition, ItemHeight, ItemWidth, PathHighlight};
 use iced_aw::{helpers::menu_tree, menu_bar, menu_tree};
-use crate::app::{App, MenuAction, Message};
+use crate::app::{App, Message};
+use crate::modals::Modals;
 
 struct ButtonStyle;
 impl button::StyleSheet for ButtonStyle {
@@ -32,12 +33,12 @@ impl button::StyleSheet for ButtonStyle {
     }
 }
 
-fn return_action(label: &str) -> MenuAction {
+fn return_action(label: &str) -> Modals {
     match label.into() {
-        "Save" => MenuAction::Save,
-        "Save as..." => MenuAction::SaveAs,
-        "Settings..." => MenuAction::Settings,
-        "Short keys" => MenuAction::ShortKeys,
+        "Save" => Modals::Save,
+        "Save as..." => Modals::SaveAs,
+        "Settings..." => Modals::Settings,
+        "Hotkeys" => Modals::Hotkeys,
         _ => panic!("Not recognized action")
     }
 }
@@ -92,7 +93,7 @@ fn menu_settings<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
             .style(theme::Text::Color(Color::from_rgb8(255, 255, 255))))
             .padding([0, 2, 0, 2]),
         vec![
-            debug_item("Short keys"),
+            debug_item("Hotkeys"),
 
         ],
     ).width(110);

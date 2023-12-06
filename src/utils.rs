@@ -6,7 +6,7 @@ pub mod utils {
     use directories::UserDirs;
     use image::{ColorType, RgbaImage};
     use screenshots::Screen;
-    use crate::app::App;
+    use crate::{app::App};
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -78,4 +78,5 @@ pub mod utils {
             .await
             .expect("Blocking task to finish")
     }
+
 }

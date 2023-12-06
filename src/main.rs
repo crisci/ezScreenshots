@@ -5,8 +5,8 @@ mod custom_widgets;
 mod resize;
 mod menu;
 mod utils;
-mod save_as_modal;
-mod settings_modal;
+mod hotkeys;
+mod modals;
 
 pub fn main() -> iced::Result {
     tracing_subscriber::fmt::init();
