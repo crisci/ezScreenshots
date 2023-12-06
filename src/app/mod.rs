@@ -22,6 +22,7 @@ use crate::app::MenuAction::{Save, SaveAs};
 use crate::settings_modal::settings_modal;
 
 use iced::event::{self, Event};
+use crate::modals::hotkeys_modal::hotkeys_modal;
 
 
 #[derive(Default)]
@@ -40,7 +41,8 @@ pub struct App {
     delay_time: f32,
     temp: f32,
     //Hotkeys
-    hotkeys: Hotkeys
+    hotkeys: Hotkeys,
+    hotkeys_modal: bool
 }
 
 impl App {
@@ -71,7 +73,7 @@ pub enum MenuAction {
     SaveAs,
     Save,
     Settings,
-    ShortKeys
+    Hotkeys
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -99,7 +101,8 @@ pub enum Message {
     Init,
     DelayChanged(f32),
     SettingSave,
-    KeyboardComb(char)
+    KeyboardComb(char),
+    OpenHotkeysModal
 }
 
 
@@ -117,8 +120,8 @@ impl Application for App {
         for i in Formats::ALL.iter() {
             vec.push(format!("{i}"))
         }
-                    (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0., temp: 0.0, hotkeys: Hotkeys::new()  },
-         Command::none())
+                    (Self { screenshot: None, resize: false, save_path: "./".to_string(), save_state: SaveState::Nothing, save_as_modal: false, formats: vec, export_format: Formats::Png, manual_select: Some(0), settings_modal: false, delay_time: 0., temp: 0.0, hotkeys: Hotkeys::new(), hotkeys_modal: false },
+                     Command::none())
     }
 
     fn title(&self) -> String {
@@ -136,7 +139,7 @@ impl Application for App {
                 Command::none()
             },
             Message::MenuAction(action) => {
-                if self.screenshot.is_none() && action != MenuAction::Settings {println!("Screenshot not available"); return Command::none()};
+                if self.screenshot.is_none() && action != MenuAction::Settings && action != MenuAction::Hotkeys {println!("Screenshot not available"); return Command::none()};
                 match action {
                     MenuAction::Save => {
                         let path = self.save_path.clone();
@@ -148,6 +151,7 @@ impl Application for App {
                     MenuAction::Settings => {
                         self.temp = self.delay_time;
                         Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenSettingsModal) },
+                    MenuAction::Hotkeys => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenHotkeysModal ),
                     _ => Command::none()
                 }
             },
@@ -174,10 +178,11 @@ impl Application for App {
                 self.save_state = SaveState::Done;
                 Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init)
             },
-            Message::OpenSaveAsModal => { self.settings_modal = false; self.save_as_modal = true; Command::none() },
-            Message::OpenSettingsModal => { self.save_as_modal = false; self.settings_modal = true; Command::none() }
-            Message::CloseModal => { self.save_as_modal = false; self.settings_modal = false; Command::none() },
-            Message::CancelButtonPressed => { self.save_as_modal = false; self.settings_modal = false; Command::none() },
+            Message::OpenSaveAsModal => { self.settings_modal = false; self.hotkeys_modal = false; self.save_as_modal = true; Command::none() },
+            Message::OpenSettingsModal => { self.save_as_modal = false; self.hotkeys_modal = false; self.settings_modal = true; Command::none() },
+            Message::OpenHotkeysModal => { self.settings_modal = false; self.save_as_modal = false; self.hotkeys_modal = true; Command::none()}
+            Message::CloseModal => { self.save_as_modal = false; self.settings_modal = false; self.hotkeys_modal = false; Command::none() },
+            Message::CancelButtonPressed => { self.save_as_modal = false; self.settings_modal = false; self.hotkeys_modal = false; Command::none() },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
@@ -292,7 +297,9 @@ impl Application for App {
             save_as_modal(&self)
         } else if self.settings_modal {
             settings_modal(&self)
-        } else { None };
+        } else if self.hotkeys_modal {
+            hotkeys_modal(&self)
+        }else { None };
 
         let content = column![
             menu,

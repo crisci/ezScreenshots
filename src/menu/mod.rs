@@ -33,11 +33,12 @@ impl button::StyleSheet for ButtonStyle {
 }
 
 fn return_action(label: &str) -> MenuAction {
+    println!("{}", label);
     match label.into() {
         "Save" => MenuAction::Save,
         "Save as..." => MenuAction::SaveAs,
         "Settings..." => MenuAction::Settings,
-        "Short keys" => MenuAction::ShortKeys,
+        "Hotkeys" => MenuAction::Hotkeys,
         _ => panic!("Not recognized action")
     }
 }
@@ -92,7 +93,7 @@ fn menu_settings<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
             .style(theme::Text::Color(Color::from_rgb8(255, 255, 255))))
             .padding([0, 2, 0, 2]),
         vec![
-            debug_item("Short keys"),
+            debug_item("Hotkeys"),
 
         ],
     ).width(110);
