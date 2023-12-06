@@ -7,6 +7,7 @@ use screenshots::image::RgbaImage;
 use iced_aw::native::Spinner;
 
 use crate::custom_widgets::{image_button};
+use crate::hotkeys;
 use crate::hotkeys::hotkeys_logic::Hotkeys;
 use crate::menu::{top_menu};
 use crate::resize::Modal;
@@ -59,7 +60,9 @@ impl App {
 
     pub(crate) fn temp(&self) -> f32  { self.temp }
 
-
+    pub(crate) fn get_screenshot(&self) -> char {
+        self.hotkeys.get_screenshot()
+    }
 }
 
 
@@ -98,6 +101,7 @@ pub enum Message {
     SettingSave,
     KeyboardComb(char)
 }
+
 
 
 impl Application for App {
@@ -189,7 +193,9 @@ impl Application for App {
             Message::DelayChanged(value) => {self.temp = value; Command::none()}
             Message::SettingSave => { self.delay_time = self.temp; self.settings_modal = false; Command::none() },
             Message::KeyboardComb(event)  => {
-                println!("{:?}", event);
+                if let Some(c) = self.hotkeys.to_message(event) {
+                    println!("{:?}", c);
+                }
                 Command::none()
             }
         };
@@ -302,12 +308,12 @@ impl Application for App {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        events_with(|event, _status| match event {
+        events_with(move |event, _status| match event {
             Event::Keyboard(keyboard_event) => match keyboard_event {
                 keyboard::Event::CharacterReceived(c) => Some(Message::KeyboardComb(c)),
-                _ => None
+                _ => None,
             },
-            _ => None
+            _ => None,
         })
     }
 

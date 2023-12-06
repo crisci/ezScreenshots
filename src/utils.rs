@@ -7,7 +7,8 @@ pub mod utils {
     use iced::Command;
     use image::{ColorType, RgbaImage};
     use screenshots::Screen;
-    use crate::app::App;
+    use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
+    use crate::app::{Message, MenuAction};
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -79,4 +80,5 @@ pub mod utils {
             .await
             .expect("Blocking task to finish")
     }
+
 }
