@@ -68,4 +68,4 @@ git clone https://github.com/crisci/ezScreenshot.git
 cd ezScreenshot
 
 # Build the application
-./build.sh
+cargo run
