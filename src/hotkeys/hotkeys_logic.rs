@@ -1,3 +1,6 @@
+use std::fmt;
+use std::path::Display;
+
 use crate::app::{Message};
 use crate::modals::Modals;
 
@@ -63,6 +66,35 @@ impl Hotkeys {
         self.save
     }
 
+    pub fn get_save_as(&self) -> char {
+        self.saveas
+    }
+
+    pub fn get_delete(&self) -> char {
+        self.delete
+    }
+
+    pub fn get_exit(&self) -> char {
+        self.exit
+    }
+
+    pub fn get_copy(&self) -> char {
+        self.copy
+    }
+
+    pub fn get_settings(&self) -> char {
+        self.settings
+    }
+
+    pub fn get_resize(&self) -> char {
+        self.resize
+    }
+
+    pub fn get_screenshot(&self) -> char {
+        self.screenshot
+    }
+
+
     pub fn unicode_to_str(c: char) -> Option<String> {
         match c {
             '\u{1}' => Some("CTRL + A".to_string()),
@@ -91,9 +123,15 @@ impl Hotkeys {
             '\u{18}' => Some("CTRL + X".to_string()),
             '\u{19}' => Some("CTRL + Y".to_string()),
             '\u{1A}' => Some("CTRL + Z".to_string()),
+            ' ' => Some("Space".to_string()),
             _ => None,
         }
     }
 }
 
+impl fmt::Display for HotkeysMap {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        
+    }
+}
 

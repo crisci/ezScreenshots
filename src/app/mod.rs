@@ -39,7 +39,7 @@ pub struct App {
     temp: f32,
     //Hotkeys
     hotkeys: Hotkeys,
-    _hotkeys_modification: HotkeysMap,
+    hotkeys_modification: HotkeysMap,
     // Modal to be shown
     modal: Modals
 }
@@ -67,6 +67,10 @@ impl App {
 
     pub(crate) fn set_screenshot(&mut self, screenshot: Option<RgbaImage>) {
         self.screenshot = screenshot
+    }
+
+    pub(crate) fn get_hotkey_modification(&self) -> HotkeysMap {
+        self.hotkeys_modification.clone()
     }
 
 }
@@ -97,7 +101,8 @@ pub enum Message {
     DelayChanged(f32),
     SettingSave,
     KeyboardComb(char),
-    OpenHotkeysModal
+    OpenHotkeysModal,
+    ChangeHotkey(HotkeysMap)
 }
 
 
@@ -126,8 +131,8 @@ impl Application for App {
                         delay_time: 0.,
                         temp: 0.0,
                         hotkeys: Hotkeys::new(),
-                        _hotkeys_modification: HotkeysMap::Save,
-                        modal: Modals::None
+                        hotkeys_modification: HotkeysMap::None,
+                        modal: Modals::None,
                     },
                      Command::none())
     }
@@ -189,7 +194,7 @@ impl Application for App {
             Message::OpenSaveAsModal => { self.modal = Modals::SaveAs; Command::none() },
             Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
             Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()}
-            Message::CloseModal => { self.modal = Modals::None; Command::none() },
+            Message::CloseModal => { self.modal = Modals::None; self.hotkeys_modification = HotkeysMap::None; Command::none() },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
@@ -211,6 +216,11 @@ impl Application for App {
                 } else {
                     return Command::none();
                 }
+            },
+            Message::ChangeHotkey(hotkey) => {
+                println!("{:?}", hotkey);
+                self.hotkeys_modification = hotkey;
+                Command::none()
             }
         };
 
