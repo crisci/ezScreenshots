@@ -1,4 +1,4 @@
-# ezScreenshot
+# ezScreenshot 📸
 
 ## Overview
 
@@ -6,36 +6,34 @@ ezScreenshot is a cross-platform screen grabbing utility that simplifies the pro
 
 ## Features
 
-1. **Platform Support**
-   - Compatible with Windows, macOS, and Linux.
+**Platform Support** 🖥️
+- Compatible with Windows, macOS, and Linux.
 
-2. **User Interface (UI)**
-   - Intuitive and user-friendly interface for easy navigation.
+**User Interface (UI)** 🎨
+- Intuitive and user-friendly interface for easy navigation.
 
-3. **Selection Options**
-   - Allows users to custom-select a screen area with a click and drag motion.
-   - Supports subsequent adjustments to the selected area.
+**Selection Options** 🖱️
+- Allows users to custom-select a screen area with a click and drag motion.
+- Supports subsequent adjustments to the selected area.
 
-4. **Hotkey Support**
-   - Customizable hotkeys for quick screen grabbing.
-   - Users can set up their preferred shortcut keys.
+**Hotkey Support** ⌨️
+- Customizable hotkeys for quick screen grabbing.
+- Users can set up their preferred shortcut keys.
 
-5. **Output Format**
-   - Supports multiple output formats: .png, .jpg, .gif.
-   - Option to copy the screen grab to the clipboard.
+**Output Format** 📤
+- Supports multiple output formats: .png, .jpg, .gif.
+- Option to copy the screen grab to the clipboard.
 
-6. **Bonus Features**
+**Delay Timer** ⏱️
+- Supports a delay timer function for scheduled screen grabs.
 
-   a. **Delay Timer**
-      - Supports a delay timer function for scheduled screen grabs.
+**Save Options** 💾
+- Allows users to specify the default save location for screen grabs.
+- Supports automatic saving with predefined naming conventions.
 
-   b. **Save Options**
-      - Allows users to specify the default save location for screen grabs.
-      - Supports automatic saving with predefined naming conventions.
-
-   c. **Multi-monitor Support**
-      - Recognizes and handles multiple monitors independently.
-      - Users can grab screens from any connected displays.
+**Multi-monitor Support** 🖥️🖥️
+- Recognizes and handles multiple monitors independently.
+- Users can grab screens from any connected displays.
 
 ## Usage
 
@@ -70,4 +68,4 @@ git clone https://github.com/crisci/ezScreenshot.git
 cd ezScreenshot
 
 # Build the application
-cargo run
+./build.sh
