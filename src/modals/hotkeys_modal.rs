@@ -9,7 +9,6 @@ use crate::custom_widgets::rounded_button;
 use crate::hotkeys::hotkeys_logic::{self, HotkeysMap};
 
 pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
-    let modification_text = if app.get_hotkey_modification()!=HotkeysMap::None {Text::new(format!("Insert the new combination for {}", app.get_hotkey_modification()))} else {None};
     return
         Some(
             Card::new(
@@ -17,14 +16,18 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
                 Column::new()
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
-                    .push(Row::new().push(Text::new("Save")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_save()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Save))))
-                    .push(Row::new().push(Text::new("Save as")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_save_as()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::SaveAs))))
-                    .push(Row::new().push(Text::new("Delete")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_delete()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delete))))
-                    .push(Row::new().push(Text::new("Exit")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_exit()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Exit))))
-                    .push(Row::new().push(Text::new("Copy")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_copy()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Copy))))
-                    .push(Row::new().push(Text::new("Settings")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_settings()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Settings))))
-                    .push(Row::new().push(Text::new("Resize")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_resize()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Resize))))
-                    .push(Row::new().push(Text::new("Screenshot")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.hotkeys().get_screenshot()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Screenshot))))                
+                    .push(Row::new().push(Text::new("Save")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Save))))
+                    .push(Row::new().push(Text::new("Save as")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save_as()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::SaveAs))))
+                    .push(Row::new().push(Text::new("Delete")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_delete()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delete))))
+                    .push(Row::new().push(Text::new("Exit")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_exit()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Exit))))
+                    .push(Row::new().push(Text::new("Copy")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_copy()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Copy))))
+                    .push(Row::new().push(Text::new("Settings")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_settings()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Settings))))
+                    .push(Row::new().push(Text::new("Resize")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_resize()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Resize))))
+                    .push(Row::new().push(Text::new("Screenshot")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_screenshot()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Screenshot)))) 
+                    .push( if app.get_hotkey_modification() != HotkeysMap::None {
+                        Row::new().push(Text::new(format!("Insert the new combination for {}", app.get_hotkey_modification())))
+                    } else {Row::new()})   
+                    .push(if app.get_hotkeys_error().is_some() {Row::new().push(Text::new(app.get_hotkeys_error().unwrap()))} else {Row::new()})            
             )
                 .foot(
                     Row::new()

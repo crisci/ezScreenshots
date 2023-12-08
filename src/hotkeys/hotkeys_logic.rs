@@ -17,7 +17,7 @@ pub struct Hotkeys {
     // TODO: delay screenshot ??
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum HotkeysMap {
     #[default]
     Save = 0,
@@ -94,6 +94,49 @@ impl Hotkeys {
         self.screenshot
     }
 
+        // Setter methods
+    pub fn set_save(&mut self, save: char) {
+        self.save = save;
+    }
+
+    pub fn set_saveas(&mut self, saveas: char) {
+        self.saveas = saveas;
+    }
+
+    pub fn set_delete(&mut self, delete: char) {
+        self.delete = delete;
+    }
+
+    pub fn set_exit(&mut self, exit: char) {
+        self.exit = exit;
+    }
+
+    pub fn set_copy(&mut self, copy: char) {
+        self.copy = copy;
+    }
+
+    pub fn set_settings(&mut self, settings: char) {
+        self.settings = settings;
+    }
+
+    pub fn set_resize(&mut self, resize: char) {
+        self.resize = resize;
+    }
+
+    pub fn set_screenshot(&mut self, screenshot: char) {
+        self.screenshot = screenshot;
+    }
+    
+
+    pub fn char_already_used(&self, c: char) -> bool {
+        if 
+        self.save == c || self.saveas == c || self.copy == c || 
+        self.delete == c || self.exit == c || self.settings == c || 
+        self.resize == c || self.screenshot == c {
+            return true;
+        }
+        return false;
+    }
 
     pub fn unicode_to_str(c: char) -> Option<String> {
         match c {
@@ -131,7 +174,17 @@ impl Hotkeys {
 
 impl fmt::Display for HotkeysMap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        
+        match self {
+            HotkeysMap::Save => write!(f, "Save"),
+            HotkeysMap::SaveAs => write!(f, "Save As"),
+            HotkeysMap::Delete => write!(f, "Delete"),
+            HotkeysMap::Exit => write!(f, "Exit"),
+            HotkeysMap::Copy => write!(f, "Copy"),
+            HotkeysMap::Settings => write!(f, "Settings"),
+            HotkeysMap::Resize => write!(f, "Resize"),
+            HotkeysMap::Screenshot => write!(f, "Screenshot"),
+            HotkeysMap::None => write!(f, "None"),
+        }
     }
 }
 

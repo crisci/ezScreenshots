@@ -1,3 +1,4 @@
+use iced::futures::stream::SelectWithStrategy;
 use iced::subscription::{events_with};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
@@ -39,7 +40,9 @@ pub struct App {
     temp: f32,
     //Hotkeys
     hotkeys: Hotkeys,
+    temp_hotkeys: Hotkeys,
     hotkeys_modification: HotkeysMap,
+    hotkeys_error_message: Option<String>,
     // Modal to be shown
     modal: Modals
 }
@@ -65,12 +68,20 @@ impl App {
         self.hotkeys.clone()
     }
 
+    pub(crate) fn temp_hotkeys(&self) -> Hotkeys {
+        self.temp_hotkeys.clone()
+    }
+
     pub(crate) fn set_screenshot(&mut self, screenshot: Option<RgbaImage>) {
         self.screenshot = screenshot
     }
 
     pub(crate) fn get_hotkey_modification(&self) -> HotkeysMap {
         self.hotkeys_modification.clone()
+    }
+
+    pub(crate) fn get_hotkeys_error(&self) -> Option<String> {
+        self.hotkeys_error_message.clone()
     }
 
 }
@@ -133,6 +144,8 @@ impl Application for App {
                         hotkeys: Hotkeys::new(),
                         hotkeys_modification: HotkeysMap::None,
                         modal: Modals::None,
+                        hotkeys_error_message: None,
+                        temp_hotkeys: Hotkeys::new(),
                     },
                      Command::none())
     }
@@ -149,6 +162,8 @@ impl Application for App {
                 self.modal = Modals::None;
                 self.export_format = Formats::Png;
                 self.save_state = Nothing;
+                self.temp = self.delay_time;
+                self.temp_hotkeys = self.hotkeys.clone();
                 Command::none()
             },
             Message::MenuAction(action) => {
@@ -194,7 +209,13 @@ impl Application for App {
             Message::OpenSaveAsModal => { self.modal = Modals::SaveAs; Command::none() },
             Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
             Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()}
-            Message::CloseModal => { self.modal = Modals::None; self.hotkeys_modification = HotkeysMap::None; Command::none() },
+            Message::CloseModal => { 
+                self.temp = self.delay_time;
+                self.temp_hotkeys = self.hotkeys.clone();
+                self.modal = Modals::None; 
+                self.hotkeys_modification = HotkeysMap::None; 
+                Command::none() 
+            },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
@@ -210,10 +231,23 @@ impl Application for App {
             Message::DelayChanged(value) => {self.temp = value; Command::none()}
             Message::SettingSave => { self.delay_time = self.temp; self.modal = Modals::None; Command::none() },
             Message::KeyboardComb(event)  => {
-                if let Some(m) = self.hotkeys.to_message(event) {
-                    println!("{:?}", m);
-                    return Command::perform(async {}, |_| {m});
+                if self.hotkeys_modification == HotkeysMap::None {
+                    if let Some(m) = self.hotkeys.to_message(event) {
+                        return Command::perform(async {}, |_| {m});
+                    } else {
+                        return Command::none();
+                    }
                 } else {
+                    //Change the hotkey
+                    println!("{:?} Changed with {}", self.hotkeys_modification, event);
+                    //Check that the char inserted is not already used
+                    if self.hotkeys.char_already_used(event) {
+                        self.hotkeys_error_message = Some("Combination already in use".to_string());
+                    } else {
+                        //Assign temp structure
+                        self.hotkeys_modification = HotkeysMap::None;
+                        self.hotkeys_error_message = None
+                    }
                     return Command::none();
                 }
             },
