@@ -47,10 +47,13 @@ pub fn image_button<'a>(image_name: &'a str, description: &'static str, message:
         .style(theme::Svg::custom_fn(|_theme| svg::Appearance {
             color: Some(color!(0xffffff)),
         }));
-    let (h, w, p) = if description == "Screenshot" { (80, 55, 0) } else { (55, 55, 5) };
+    let (h, w, p) = match description{
+        "Screenshot" => (80, 55, 0),
+        "Folder" => (30, 32, 0),
+        _ => (55, 55, 5)
+    };
     let c = column![
-
-        text(description),
+        if description != "Folder" {text(description)} else {text("")},
         container(
             button(container(svg).padding(p))
             .style(iced::theme::Button::Custom(Box::new(RadiusButton::new(description.to_string()))))

@@ -5,7 +5,7 @@ use iced::widget::{Column, container, Row, Text};
 use iced_aw::{Card, SelectionList, SelectionListStyles};
 use iced_aw::native::Spinner;
 use crate::app::{App, Message, SaveState};
-use crate::custom_widgets::rounded_button;
+use crate::custom_widgets::{image_button, rounded_button};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Formats {
@@ -49,6 +49,7 @@ impl Display for Formats {
     }
 }
 
+
 pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
     let selection_list: SelectionList<_, Message> = SelectionList::new_with(
         &app.formats()[..],
@@ -65,16 +66,27 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
         .spacing(10)
         .padding(5)
         .width(Length::Fill);
+
+    let choose_path = Row::new()
+        .spacing(10)
+        .push(Text::new(app.save_path()))
+        .push(image_button("folder","Folder", Message::CloseModal))
+        .spacing(10)
+        .align_items(Alignment::Center);
+
+
     return
         Some(
             Card::new(
                 Text::new("Save as..."),
                 Column::new()
-                    .width(Length::Fill)
-                    .align_items(Alignment::Center)
                     .spacing(10)
                     .push(Text::new("Select the output format").width(Length::Fill).horizontal_alignment(Center))
                     .push(selection_list)
+                    .push(Text::new("Select the output folder"))
+                    .push(choose_path)
+                    .width(Length::Fill)
+                    .align_items(Alignment::Center)
             )
                 .foot(
                     match app.save_state() {

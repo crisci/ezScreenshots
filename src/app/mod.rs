@@ -53,6 +53,10 @@ impl App {
         self.manual_select
     }
 
+    pub(crate) fn save_path(&self) -> String {
+        self.save_path.clone()
+    }
+
     pub(crate) fn save_state(&self) -> SaveState {
         self.save_state.clone()
     }
@@ -205,6 +209,7 @@ impl Application for App {
                 }
             }
         };
+
 
     }
     fn view(&self) ->  Element<'_, Self::Message, Renderer<Self::Theme>> {

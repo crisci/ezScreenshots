@@ -21,6 +21,7 @@ impl button::StyleSheet for RadiusButton {
                 "Delete" => delete_theme(),
                 "Save" => save_theme(),
                 "Cancel" => cancel_theme(),
+                "Folder" => folder_theme(),
                 _ => screenshot_theme()
             }
     }
@@ -62,6 +63,14 @@ fn cancel_theme() -> Appearance {
     Appearance {
         border_radius:100.0.into(),
         background: Option::from(iced::Background::Color(Color::from(color!(0xF90851)))),
+        ..Appearance::default()
+    }
+}
+
+fn folder_theme() -> Appearance{
+    Appearance {
+        border_radius:100.0.into(),
+        background: Option::from(iced::Background::Color(Color::from(color!(0x08BFF9)))),
         ..Appearance::default()
     }
 }
