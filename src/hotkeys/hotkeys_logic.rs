@@ -1,10 +1,14 @@
-use std::fmt;
-use std::path::Display;
+use std::fs::File;
+use std::io::{Write, BufReader};
+use std::{fmt, fs};
+use std::path::{Display, PathBuf};
+
+use serde::{Deserialize, Serialize};
 
 use crate::app::{Message};
 use crate::modals::Modals;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Hotkeys {
     save: char,
     saveas: char,
@@ -151,6 +155,22 @@ impl Hotkeys {
             HotkeysMap::Screenshot => self.set_screenshot(new_char),
             HotkeysMap::None => (),
         }
+    }
+
+    pub fn save_hotkeys(&self) -> Result<(), String> {
+        let dir = directories::BaseDirs::new().ok_or("Error getting base directories")?;
+        let new_dir = PathBuf::from(format!("{}/{}", dir.data_local_dir().to_str().ok_or("Error getting data local dir")?, "ezScreenshot"));
+        let file_path = new_dir.join("hotkey.config");
+    
+        if !new_dir.exists() {
+            fs::create_dir_all(&new_dir).map_err(|err| format!("Error creating directory: {}", err))?;
+        } 
+        // File already exists, so save the file
+        let mut file = File::create(&file_path).map_err(|err| format!("Error creating file: {}", err))?;
+        let serialized = serde_json::to_string(self).map_err(|err| format!("Serialization error: {}", err))?;
+        file.write_all(serialized.as_bytes()).map_err(|err| format!("Error writing to file: {}", err))?;
+    
+        Ok(())
     }
 
     pub fn unicode_to_str(c: char) -> Option<String> {

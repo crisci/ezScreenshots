@@ -1,3 +1,6 @@
+use std::fs::{File, self};
+use std::path::PathBuf;
+
 use iced::futures::stream::SelectWithStrategy;
 use iced::subscription::{events_with};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
@@ -126,8 +129,15 @@ impl Application for App {
     type Theme = Theme;
     type Flags = ();
 
+
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let mut vec = Vec::with_capacity(10);
+
+        // TODO: create or read by a folder to get the hotkeys settings
+        let hotkeys_saved = match hotkeys_file_read() {
+            Ok(hk) => hk,
+            _ => Hotkeys::new()
+        };
 
 
         for i in Formats::ALL.iter() {
@@ -143,11 +153,11 @@ impl Application for App {
                         manual_select: Some(0),
                         delay_time: 0.,
                         temp: 0.0,
-                        hotkeys: Hotkeys::new(),
+                        hotkeys: hotkeys_saved.clone(),
                         hotkeys_modification: HotkeysMap::None,
                         modal: Modals::None,
                         hotkeys_error_message: None,
-                        temp_hotkeys: Hotkeys::new(),
+                        temp_hotkeys: hotkeys_saved.clone(),
                     },
                      Command::none())
     }
@@ -266,6 +276,9 @@ impl Application for App {
             Message::HotkeysSave => {
                 self.hotkeys = self.temp_hotkeys.clone();
                 self.temp_hotkeys = self.hotkeys.clone();
+                match self.hotkeys.save_hotkeys() {
+                    _ => ()
+                };
                 self.modal = Modals::None;
                 Command::none()
             },
