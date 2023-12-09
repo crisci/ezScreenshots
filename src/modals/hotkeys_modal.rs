@@ -27,7 +27,8 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
                     .push( if app.get_hotkey_modification() != HotkeysMap::None {
                         Row::new().push(Text::new(format!("Insert the new combination for {}", app.get_hotkey_modification())))
                     } else {Row::new()})   
-                    .push(if app.get_hotkeys_error().is_some() {Row::new().push(Text::new(app.get_hotkeys_error().unwrap()))} else {Row::new()})            
+                    .push(if app.get_hotkeys_error().is_some() {Row::new().push(Text::new(app.get_hotkeys_error().unwrap()))} else {Row::new()}) 
+                    .width(Fill)           
             )
                 .foot(
                     Row::new()
@@ -39,7 +40,7 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
                             rounded_button("Cancel", Message::CloseModal)
                         )
                         .push(
-                            rounded_button("Save", Message::CloseModal)
+                            rounded_button("Save", Message::HotkeysSave)
                         )
                 )
                 .max_width(300.0)

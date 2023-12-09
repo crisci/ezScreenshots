@@ -111,9 +111,11 @@ pub enum Message {
     Init,
     DelayChanged(f32),
     SettingSave,
+    HotkeysSave,
     KeyboardComb(char),
     OpenHotkeysModal,
-    ChangeHotkey(HotkeysMap)
+    ChangeHotkey(HotkeysMap),
+    Quit
 }
 
 
@@ -232,8 +234,12 @@ impl Application for App {
             Message::SettingSave => { self.delay_time = self.temp; self.modal = Modals::None; Command::none() },
             Message::KeyboardComb(event)  => {
                 if self.hotkeys_modification == HotkeysMap::None {
-                    if let Some(m) = self.hotkeys.to_message(event) {
-                        return Command::perform(async {}, |_| {m});
+                    if self.modal == Modals::None {
+                        if let Some(m) = self.hotkeys.to_message(event) {
+                            return Command::perform(async {}, |_| {m});
+                        } else {
+                            return Command::none();
+                        }
                     } else {
                         return Command::none();
                     }
@@ -241,10 +247,11 @@ impl Application for App {
                     //Change the hotkey
                     println!("{:?} Changed with {}", self.hotkeys_modification, event);
                     //Check that the char inserted is not already used
-                    if self.hotkeys.char_already_used(event) {
+                    if self.temp_hotkeys.char_already_used(event) {
                         self.hotkeys_error_message = Some("Combination already in use".to_string());
                     } else {
                         //Assign temp structure
+                        self.temp_hotkeys.assign_new_value(event, self.hotkeys_modification.clone());
                         self.hotkeys_modification = HotkeysMap::None;
                         self.hotkeys_error_message = None
                     }
@@ -255,6 +262,15 @@ impl Application for App {
                 println!("{:?}", hotkey);
                 self.hotkeys_modification = hotkey;
                 Command::none()
+            },
+            Message::HotkeysSave => {
+                self.hotkeys = self.temp_hotkeys.clone();
+                self.temp_hotkeys = self.hotkeys.clone();
+                self.modal = Modals::None;
+                Command::none()
+            },
+            Message::Quit => {
+                std::process::exit(0)
             }
         };
 

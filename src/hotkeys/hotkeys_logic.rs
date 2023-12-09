@@ -48,19 +48,6 @@ impl Hotkeys {
 }
 
 impl Hotkeys {
-    pub fn to_message(&self, c: char) -> Option<Message> {
-        return match c {
-            _ if self.save == c => Some(Message::MenuAction(Modals::Save)),
-            _ if self.saveas == c => Some(Message::MenuAction(Modals::SaveAs)),
-            _ if self.delete == c => Some(Message::Drop),
-            _ if self.exit == c => None, //TODO: implement close application
-            _ if self.copy == c => None, //TODO: copy to clipboard
-            _ if self.settings == c => Some(Message::MenuAction(Modals::Settings)),
-            _ if self.resize == c => Some(Message::Resize),
-            _ if self.screenshot == c => Some(Message::Screenshot),
-            _ => None,
-        };
-    }
 
     pub fn get_save(&self) -> char {
         self.save
@@ -126,6 +113,20 @@ impl Hotkeys {
     pub fn set_screenshot(&mut self, screenshot: char) {
         self.screenshot = screenshot;
     }
+
+    pub fn to_message(&self, c: char) -> Option<Message> {
+        return match c {
+            _ if self.save == c => Some(Message::MenuAction(Modals::Save)),
+            _ if self.saveas == c => Some(Message::MenuAction(Modals::SaveAs)),
+            _ if self.delete == c => Some(Message::Drop),
+            _ if self.exit == c => Some(Message::Quit), //TODO: implement close application
+            _ if self.copy == c => None, //TODO: copy to clipboard
+            _ if self.settings == c => Some(Message::MenuAction(Modals::Settings)),
+            _ if self.resize == c => Some(Message::Resize),
+            _ if self.screenshot == c => Some(Message::Screenshot),
+            _ => None,
+        };
+    }
     
 
     pub fn char_already_used(&self, c: char) -> bool {
@@ -136,6 +137,20 @@ impl Hotkeys {
             return true;
         }
         return false;
+    }
+
+    pub fn assign_new_value(&mut self, new_char: char, hotkey: HotkeysMap) {
+        match hotkey {
+            HotkeysMap::Save => self.set_save(new_char),
+            HotkeysMap::SaveAs => self.set_saveas(new_char),
+            HotkeysMap::Delete => self.set_delete(new_char),
+            HotkeysMap::Exit => self.set_exit(new_char),
+            HotkeysMap::Copy => self.set_copy(new_char),
+            HotkeysMap::Settings => self.set_settings(new_char),
+            HotkeysMap::Resize => self.set_resize(new_char),
+            HotkeysMap::Screenshot => self.set_screenshot(new_char),
+            HotkeysMap::None => (),
+        }
     }
 
     pub fn unicode_to_str(c: char) -> Option<String> {
