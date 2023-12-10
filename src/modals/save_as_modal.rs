@@ -51,6 +51,7 @@ impl Display for Formats {
 
 
 pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
+    let set_default= false;
     let selection_list: SelectionList<_, Message> = SelectionList::new_with(
         &app.formats()[..],
         Message::FormatSelected,
@@ -70,9 +71,10 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
     let choose_path = Row::new()
         .spacing(10)
         .push(Text::new(app.save_path()))
-        .push(image_button("folder","Folder", Message::CloseModal))
+        .push(image_button("folder","Folder", Message::PathSelected(set_default)))
         .spacing(10)
-        .align_items(Alignment::Center);
+        .align_items(Alignment::End);
+
 
 
     return

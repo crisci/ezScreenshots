@@ -1,5 +1,7 @@
 pub mod utils {
-    use std::thread;
+    use std::fs::{File, self};
+    use std::io::{BufReader, Write};
+    use std::{thread, path::PathBuf};
     use std::time::Duration;
     use image as img;
     use chrono::{Datelike, Timelike};
@@ -19,14 +21,13 @@ pub mod utils {
     pub struct ExportError(String);
 
 
-    pub async fn save_to_png(screenshot: RgbaImage, _path: String) -> Result<String, ExportError> {
-        let user_dir = UserDirs::new();
+    pub async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-        let path = format!("{}/SCRN_{}.png", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
+        let path_image = format!("{}/SCRN_{}.png", path, string_time);
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
-                &path,
+                &path_image,
                 &screenshot.clone().into_raw(),
                 screenshot.width(),
                 screenshot.height(),
@@ -39,14 +40,13 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_jpeg(screenshot: RgbaImage, _path: String) -> Result<String, ExportError> {
-        let user_dir = UserDirs::new();
+    pub async fn save_to_jpeg(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-        let path = format!("{}/SCRN_{}.jpeg", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
+        let path_image = format!("{}/SCRN_{}.jpeg", path, string_time);
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
-                &path,
+                &path_image,
                 &screenshot.clone().into_raw(),
                 screenshot.width(),
                 screenshot.height(),
@@ -59,14 +59,13 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_gif(screenshot: RgbaImage, _path: String) -> Result<String, ExportError> {
-        let user_dir = UserDirs::new();
+    pub async fn save_to_gif(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-        let path = format!("{}/SCRN_{}.gif", user_dir.clone().unwrap().picture_dir().unwrap().to_str().unwrap(), string_time);
+        let path_image = format!("{}/SCRN_{}.gif", path, string_time);
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
-                &path,
+                &path_image,
                 &screenshot.clone().into_raw(),
                 screenshot.width(),
                 screenshot.height(),
@@ -79,4 +78,30 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
+    pub fn default_path_file_read() -> Result<String, String> {
+        let df = format!("{}", UserDirs::new().clone().unwrap().picture_dir().unwrap().to_str().unwrap());
+        let serialized = serde_json::to_string(&df).map_err(|err| format!("Serialization error: {}", err))?;
+
+        let dir = directories::BaseDirs::new().ok_or("Error getting base directories")?;
+        let new_dir = PathBuf::from(format!("{}/{}", dir.data_local_dir().to_str().ok_or("Error getting data local dir")?, "ezScreenshots"));
+        let file_path = new_dir.join("default_path.config");
+
+        if !new_dir.exists() {
+            fs::create_dir_all(&new_dir).map_err(|err| format!("Error creating directory: {}", err))?;
+
+            // First time creation
+            let mut file = File::create(&file_path).map_err(|err| format!("Error creating file: {}", err))?;
+            file.write_all(serialized.as_bytes()).map_err(|err| format!("Error writing to file: {}", err))?;
+            println!("File created and serialized: {:?}", file_path);
+        } else {
+            // File already exists, so read the file
+            println!("File already exists.");
+            let file = File::open(&file_path).map_err(|err| format!("Error opening file: {}", err))?;
+            let reader = BufReader::new(file);
+            let default_path: Result<String, _> = serde_json::from_reader(reader).map_err(|err| format!("Deserialization error: {}", err));
+            return Ok(default_path?);
+        }
+
+        Ok(df)
+    }
 }

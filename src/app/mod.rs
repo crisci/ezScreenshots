@@ -1,3 +1,4 @@
+use directories::UserDirs;
 use iced::subscription::{events_with};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
@@ -5,7 +6,8 @@ use iced::widget::space::Space;
 use iced::window::Mode;
 use iced_aw::{ modal };
 use screenshots::image::RgbaImage;
-use iced_aw::native::Spinner;
+use iced_aw::native::{Spinner};
+use nfd::{open_pick_folder,Response};
 
 use crate::custom_widgets::{image_button};
 use crate::hotkeys::hotkeys_logic::{Hotkeys, HotkeysMap};
@@ -15,6 +17,8 @@ use crate::resize::Modal;
 use crate::app::SaveState::{Nothing, OnGoing};
 use crate::modals::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
+
+use crate::modals::setpath_modal::setpath_modal;
 
 use iced::keyboard::{self};
 use crate::modals::settings_modal::settings_modal;
@@ -87,13 +91,15 @@ pub enum Message {
     CloseModal,
     OpenSaveAsModal,
     OpenSettingsModal,
+    OpenSetPathModal,
     SaveAsButtonPressed,
     FormatSelected(usize, String),
     Init,
     DelayChanged(f32),
     SettingSave,
     KeyboardComb(char),
-    OpenHotkeysModal
+    OpenHotkeysModal,
+    PathSelected(bool),
 }
 
 
@@ -107,6 +113,11 @@ impl Application for App {
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let mut vec = Vec::with_capacity(10);
 
+        let default_path = match default_path_file_read() {
+            Ok(dp) => dp,
+            _ => format!("{}", UserDirs::new().unwrap().picture_dir().unwrap().to_str().unwrap())
+        };
+
 
         for i in Formats::ALL.iter() {
             vec.push(format!("{i}"))
@@ -114,7 +125,7 @@ impl Application for App {
                     (Self {
                         screenshot: None,
                         resize: false,
-                        save_path: "./".to_string(),
+                        save_path: default_path,
                         save_state: SaveState::Nothing,
                         formats: vec,
                         export_format: Formats::Png,
@@ -143,7 +154,7 @@ impl Application for App {
                 Command::none()
             },
             Message::MenuAction(action) => {
-                if self.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys {println!("Screenshot not available"); return Command::none()};
+                if self.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys && action != Modals::SetPath{println!("Screenshot not available"); return Command::none()};
                 match action {
                     Modals::Save => {
                         let path = self.save_path.clone();
@@ -156,6 +167,7 @@ impl Application for App {
                         self.temp = self.delay_time;
                         Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenSettingsModal) },
                     Modals::Hotkeys => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenHotkeysModal ),
+                    Modals::SetPath => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSetPathModal ),
                     _ => Command::none()
                 }
             },
@@ -184,7 +196,8 @@ impl Application for App {
             },
             Message::OpenSaveAsModal => { self.modal = Modals::SaveAs; Command::none() },
             Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
-            Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()}
+            Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()},
+            Message::OpenSetPathModal => { self.modal = Modals::SetPath; Command::none()},
             Message::CloseModal => { self.modal = Modals::None; Command::none() },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
@@ -192,9 +205,9 @@ impl Application for App {
                 let path = self.save_path.clone();
                 self.save_state = SaveState::OnGoing;
                 match self.export_format {
-                    Formats::Png => {Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)}
-                    Formats::Gif => {Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved)}
-                    Formats::Jpeg => {Command::perform(save_to_jpeg(screenshot, path), Message::ScreenshotSaved)}
+                    Formats::Png => {Command::perform(save_to_png(screenshot, self.save_path()), Message::ScreenshotSaved)}
+                    Formats::Gif => {Command::perform(save_to_gif(screenshot, self.save_path()), Message::ScreenshotSaved)}
+                    Formats::Jpeg => {Command::perform(save_to_jpeg(screenshot, self.save_path()), Message::ScreenshotSaved)}
                 }
             },
             Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
@@ -207,6 +220,24 @@ impl Application for App {
                 } else {
                     return Command::none();
                 }
+            },
+            Message::PathSelected(set_default) => {
+                let result = open_pick_folder(None);
+                match result {
+                    Ok(Response::Okay(folder_path)) => {
+                        if set_default {self.save_path = folder_path /*setdefault*/ } else {self.save_path = folder_path}
+                        Command::none()
+                    },
+                    Ok(Response::OkayMultiple(_)) => {
+                        Command::none()
+                    },
+                    Ok(Response::Cancel) => {
+                        Command::none()
+                    },
+                    Err(error) => {
+                        Command::none()
+                    }
+                }
             }
         };
 
@@ -214,6 +245,7 @@ impl Application for App {
     }
     fn view(&self) ->  Element<'_, Self::Message, Renderer<Self::Theme>> {
         let menu = top_menu(self);
+        println!("Cosa devo scoprireeeeeeeeeeeeeeeeeeeeeeeeeeeeeee: {}", self.save_path());
         let image: Element<Message> = if let Some(screenshot) = &self.screenshot
         {
             image(image::Handle::from_pixels(
@@ -298,6 +330,7 @@ impl Application for App {
         ];
 
         let overlay = match self.modal {
+            Modals::SetPath => setpath_modal(&self),
             Modals::Hotkeys => hotkeys_modal(&self),
             Modals::SaveAs => save_as_modal(&self),
             Modals::Settings => settings_modal(&self),

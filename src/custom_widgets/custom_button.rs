@@ -69,8 +69,8 @@ fn cancel_theme() -> Appearance {
 
 fn folder_theme() -> Appearance{
     Appearance {
-        border_radius:100.0.into(),
-        background: Option::from(iced::Background::Color(Color::from(color!(0x08BFF9)))),
+        border_radius:10.0.into(),
+        background: Option::from(iced::Background::Color(Color::from(color!(0x0090CE)))),
         ..Appearance::default()
     }
 }

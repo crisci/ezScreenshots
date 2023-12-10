@@ -39,6 +39,7 @@ fn return_action(label: &str) -> Modals {
         "Save as..." => Modals::SaveAs,
         "Settings..." => Modals::Settings,
         "Hotkeys" => Modals::Hotkeys,
+        "Default Path" => Modals::SetPath,
         _ => panic!("Not recognized action")
     }
 }
@@ -80,7 +81,6 @@ fn menu_file<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
             debug_item("Save"),
             debug_item("Save as..."),
             debug_item("Settings...")
-
         ],
     ).width(110);
 
@@ -94,7 +94,7 @@ fn menu_settings<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
             .padding([0, 2, 0, 2]),
         vec![
             debug_item("Hotkeys"),
-
+            debug_item("Default Path"),
         ],
     ).width(110);
 

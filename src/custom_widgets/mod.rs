@@ -49,7 +49,7 @@ pub fn image_button<'a>(image_name: &'a str, description: &'static str, message:
         }));
     let (h, w, p) = match description{
         "Screenshot" => (80, 55, 0),
-        "Folder" => (30, 32, 0),
+        "Folder" => (38, 32, 1),
         _ => (55, 55, 5)
     };
     let c = column![
