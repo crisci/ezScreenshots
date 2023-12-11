@@ -68,12 +68,14 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
         .padding(5)
         .width(Length::Fill);
 
-    let choose_path = Row::new()
+    let choose_path = container(Row::new()
         .spacing(10)
-        .push(Text::new(app.save_path()))
-        .push(image_button("folder","Folder", Message::PathSelected(set_default)))
+        .push(Text::new(app.save_path()).width(Length::FillPortion(6)))
+        .push(image_button("folder","Folder", Message::PathSelected).width(Length::FillPortion(1)))
         .spacing(10)
-        .align_items(Alignment::End);
+        .align_items(Alignment::End))
+        .center_x()
+        .center_y();
 
 
 

@@ -18,7 +18,7 @@ use crate::app::SaveState::{Nothing, OnGoing};
 use crate::modals::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
 
-use crate::modals::setpath_modal::setpath_modal;
+use crate::modals::setdefaultpath_modal::setpath_modal;
 
 use iced::keyboard::{self};
 use crate::modals::settings_modal::settings_modal;
@@ -26,12 +26,14 @@ use crate::modals::settings_modal::settings_modal;
 use iced::event::{Event};
 use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
+use crate::utils::select_path;
 
 
 #[derive(Default)]
 pub struct App {
     pub(crate) screenshot: Option<RgbaImage>,
     resize: bool,
+    default_path: String,
     save_path: String,
     save_state: SaveState,
     //Needed for save as section
@@ -59,6 +61,10 @@ impl App {
 
     pub(crate) fn save_path(&self) -> String {
         self.save_path.clone()
+    }
+
+    pub(crate) fn default_path(&self) -> String {
+        self.default_path.clone()
     }
 
     pub(crate) fn save_state(&self) -> SaveState {
@@ -99,7 +105,8 @@ pub enum Message {
     SettingSave,
     KeyboardComb(char),
     OpenHotkeysModal,
-    PathSelected(bool),
+    PathSelected,
+    SetDefaultPath,
 }
 
 
@@ -113,7 +120,7 @@ impl Application for App {
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let mut vec = Vec::with_capacity(10);
 
-        let default_path = match default_path_file_read() {
+        let path = match default_path_file_read() {
             Ok(dp) => dp,
             _ => format!("{}", UserDirs::new().unwrap().picture_dir().unwrap().to_str().unwrap())
         };
@@ -125,7 +132,8 @@ impl Application for App {
                     (Self {
                         screenshot: None,
                         resize: false,
-                        save_path: default_path,
+                        default_path: path.clone(),
+                        save_path: path,
                         save_state: SaveState::Nothing,
                         formats: vec,
                         export_format: Formats::Png,
@@ -147,6 +155,7 @@ impl Application for App {
         self.resize = false;
         return match message {
             Message::Init => {
+                self.save_path = self.default_path.clone();
                 self.manual_select = Some(0);
                 self.modal = Modals::None;
                 self.export_format = Formats::Png;
@@ -198,16 +207,19 @@ impl Application for App {
             Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
             Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()},
             Message::OpenSetPathModal => { self.modal = Modals::SetPath; Command::none()},
-            Message::CloseModal => { self.modal = Modals::None; Command::none() },
+            Message::CloseModal => {
+                if self.modal == Modals::SaveAs || self.modal == Modals::SetPath {self.save_path = self.default_path.clone()}
+                    {self.modal = Modals::None;Command::none() }
+                },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
                 let path = self.save_path.clone();
                 self.save_state = SaveState::OnGoing;
                 match self.export_format {
-                    Formats::Png => {Command::perform(save_to_png(screenshot, self.save_path()), Message::ScreenshotSaved)}
-                    Formats::Gif => {Command::perform(save_to_gif(screenshot, self.save_path()), Message::ScreenshotSaved)}
-                    Formats::Jpeg => {Command::perform(save_to_jpeg(screenshot, self.save_path()), Message::ScreenshotSaved)}
+                    Formats::Png => {Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)}
+                    Formats::Gif => {Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved)}
+                    Formats::Jpeg => {Command::perform(save_to_jpeg(screenshot, path), Message::ScreenshotSaved)}
                 }
             },
             Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
@@ -221,23 +233,12 @@ impl Application for App {
                     return Command::none();
                 }
             },
-            Message::PathSelected(set_default) => {
-                let result = open_pick_folder(None);
-                match result {
-                    Ok(Response::Okay(folder_path)) => {
-                        if set_default {self.save_path = folder_path /*setdefault*/ } else {self.save_path = folder_path}
-                        Command::none()
-                    },
-                    Ok(Response::OkayMultiple(_)) => {
-                        Command::none()
-                    },
-                    Ok(Response::Cancel) => {
-                        Command::none()
-                    },
-                    Err(error) => {
-                        Command::none()
-                    }
-                }
+            Message::PathSelected => {self.save_path = select_path().unwrap(); Command::none()}
+            Message::SetDefaultPath => {
+                self.default_path = self.save_path();
+                save_default_path(self.default_path.clone()).unwrap();
+                self.modal = Modals::None;
+                Command::none()
             }
         };
 
@@ -245,7 +246,6 @@ impl Application for App {
     }
     fn view(&self) ->  Element<'_, Self::Message, Renderer<Self::Theme>> {
         let menu = top_menu(self);
-        println!("Cosa devo scoprireeeeeeeeeeeeeeeeeeeeeeeeeeeeeee: {}", self.save_path());
         let image: Element<Message> = if let Some(screenshot) = &self.screenshot
         {
             image(image::Handle::from_pixels(
