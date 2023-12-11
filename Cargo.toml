@@ -17,3 +17,4 @@ chrono = "0.4.31"
 directories = "5.0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+arboard = "3.3.0"

@@ -117,6 +117,7 @@ pub enum Message {
     HotkeysSave,
     KeyboardComb(char),
     OpenHotkeysModal,
+    CopyToClipboard,
     ChangeHotkey(HotkeysMap),
     Quit
 }
@@ -273,6 +274,13 @@ impl Application for App {
                 self.hotkeys_modification = hotkey;
                 Command::none()
             },
+            Message::CopyToClipboard => {
+                match copy_to_clipboard(&self.screenshot) {
+                    Ok(()) => println!("Copied success"),
+                    _ => eprintln!("Error")
+                };
+                Command::none()
+            }
             Message::HotkeysSave => {
                 self.hotkeys = self.temp_hotkeys.clone();
                 self.temp_hotkeys = self.hotkeys.clone();

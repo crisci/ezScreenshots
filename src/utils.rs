@@ -1,14 +1,17 @@
 pub mod utils {
     use std::fs::{File, self};
     use std::io::{BufReader, Write};
+    use std::ops::Deref;
     use std::{thread, path::PathBuf};
     use std::time::Duration;
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
     use image::{ColorType, RgbaImage};
+    use img::EncodableLayout;
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
+    use arboard::{Clipboard, ImageData, Error};
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -106,6 +109,14 @@ pub mod utils {
         }
     
         Ok(hot)
+    }
+
+    pub fn copy_to_clipboard(img: &Option<RgbaImage>) -> Result<(), Error> {
+        let mut clipboard = Clipboard::new().unwrap();
+        let img_rgba = img.clone().unwrap();
+        let img_data = ImageData { width: img_rgba.width() as usize, height: img_rgba.height() as usize, bytes: img_rgba.as_bytes().as_ref().into()};
+        clipboard.set_image(img_data)?;
+        Ok(())
     }
 
 }
