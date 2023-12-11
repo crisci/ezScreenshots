@@ -1,11 +1,11 @@
 use std::fs::File;
-use std::io::{Write, BufReader};
+use std::io::Write;
 use std::{fmt, fs};
-use std::path::{Display, PathBuf};
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::app::{Message};
+use crate::app::Message;
 use crate::modals::Modals;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

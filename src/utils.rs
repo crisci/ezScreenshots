@@ -1,6 +1,5 @@
-use iced::Command;
 use nfd::{open_pick_folder, Response};
-use crate::utils::utils::save_default_path;
+
 
 pub mod utils {
     use std::fs::{File, self};
@@ -182,7 +181,7 @@ pub fn copy_to_clipboard(image: &Option<RgbaImage>) -> Result<(), Box<dyn std::e
             Ok(Response::Cancel) => {
                 None
             },
-            Err(error) => {
+            Err(_) => {
                 panic!("Error selection folder");
             }
         }

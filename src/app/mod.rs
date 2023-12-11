@@ -1,21 +1,17 @@
 use directories::UserDirs;
-use std::fs::{File, self};
-use std::path::PathBuf;
 
-use iced::futures::stream::SelectWithStrategy;
-use iced::subscription::{events_with};
+use iced::subscription::events_with;
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::widget::space::Space;
 use iced::window::Mode;
-use iced_aw::{ modal };
+use iced_aw::modal;
 use screenshots::image::RgbaImage;
 use iced_aw::native::Spinner;
-use nfd::{open_pick_folder,Response};
 
-use crate::custom_widgets::{image_button};
+use crate::custom_widgets::image_button;
 use crate::hotkeys::hotkeys_logic::{Hotkeys, HotkeysMap};
-use crate::menu::{top_menu};
+use crate::menu::top_menu;
 use crate::resize::Modal;
 
 use crate::app::SaveState::{Nothing, OnGoing};
@@ -27,7 +23,7 @@ use crate::modals::setdefaultpath_modal::setpath_modal;
 use iced::keyboard::{self};
 use crate::modals::settings_modal::settings_modal;
 
-use iced::event::{Event};
+use iced::event::Event;
 use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
 use crate::utils::select_path;
@@ -70,10 +66,6 @@ impl App {
         self.save_path.clone()
     }
 
-    pub(crate) fn default_path(&self) -> String {
-        self.default_path.clone()
-    }
-
     pub(crate) fn save_state(&self) -> SaveState {
         self.save_state.clone()
     }
@@ -81,10 +73,6 @@ impl App {
     pub(crate) fn delay_time(&self) -> f32 { self.delay_time }
 
     pub(crate) fn temp(&self) -> f32  { self.temp }
-
-    pub(crate) fn hotkeys(&self) -> Hotkeys {
-        self.hotkeys.clone()
-    }
 
     pub(crate) fn temp_hotkeys(&self) -> Hotkeys {
         self.temp_hotkeys.clone()

@@ -1,9 +1,7 @@
 use iced::{Alignment, Length};
 use iced::Length::Fill;
-use iced::mouse::Button;
-use iced::widget::{button, Column, container, Row, row, Text, text};
-use iced_aw::{Card};
-use tracing_subscriber::fmt::format;
+use iced::widget::{button, Column, Row, Text};
+use iced_aw::Card;
 use crate::app::{App, Message};
 use crate::custom_widgets::rounded_button;
 use crate::hotkeys::hotkeys_logic::{self, HotkeysMap};
