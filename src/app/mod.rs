@@ -275,10 +275,8 @@ impl Application for App {
                 Command::none()
             },
             Message::CopyToClipboard => {
-                match copy_to_clipboard(&self.screenshot) {
-                    Ok(()) => println!("Copied success"),
-                    _ => eprintln!("Error")
-                };
+                copy_to_clipboard(&self.screenshot);
+                println!("Copied");  
                 Command::none()
             }
             Message::HotkeysSave => {
