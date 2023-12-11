@@ -132,6 +132,7 @@ pub enum Message {
     HotkeysSave,
     KeyboardComb(char),
     OpenHotkeysModal,
+    CopyToClipboard,
     ChangeHotkey(HotkeysMap),
     Quit,
     PathSelected,
@@ -298,6 +299,11 @@ impl Application for App {
                 self.hotkeys_modification = hotkey;
                 Command::none()
             },
+            Message::CopyToClipboard => {
+                copy_to_clipboard(&self.screenshot);
+                println!("Copied");  
+                Command::none()
+            }
             Message::HotkeysSave => {
                 self.hotkeys = self.temp_hotkeys.clone();
                 self.temp_hotkeys = self.hotkeys.clone();

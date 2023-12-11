@@ -6,13 +6,15 @@ pub mod utils {
     use std::fs::{File, self};
     use std::io::{BufReader, Write};
     use std::{thread, path::PathBuf};
+    use std::borrow::Cow;
     use std::time::Duration;
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
-    use image::{ColorType, RgbaImage};
+    use image::{ColorType, EncodableLayout, RgbaImage};
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
+    use arboard::{Clipboard, ImageData};
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -149,6 +151,17 @@ pub mod utils {
         file.write_all(serialized.as_bytes()).map_err(|err| format!("Error writing to file: {}", err))?;
 
         Ok(())
+    }
+
+pub fn copy_to_clipboard(image: &Option<RgbaImage>) {
+        let mut ctx = Clipboard::new().unwrap();
+        let binding = image.clone().unwrap();
+        let img = ImageData {
+            width: binding.width() as usize,
+            height: binding.height() as usize,
+            bytes: Cow::from(binding.as_bytes())
+        };
+        ctx.set_image(img).unwrap();
     }
 }
     pub fn select_path() -> Option<String>{
