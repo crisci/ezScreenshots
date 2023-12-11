@@ -82,6 +82,19 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
+<<<<<<< HEAD
+    pub fn default_path_file_read() -> Result<String, String> {
+        let df = format!("{}", UserDirs::new().clone().unwrap().picture_dir().unwrap().to_str().unwrap());
+        let serialized = serde_json::to_string(&df).map_err(|err| format!("Serialization error: {}", err))?;
+
+        let dir = directories::BaseDirs::new().ok_or("Error getting base directories")?;
+        let new_dir = PathBuf::from(format!("{}/{}", dir.data_local_dir().to_str().ok_or("Error getting data local dir")?, "ezScreenshots"));
+        let file_path = new_dir.join("default_path.config");
+
+        if !new_dir.exists() {
+            fs::create_dir_all(&new_dir).map_err(|err| format!("Error creating directory: {}", err))?;
+
+=======
     pub fn hotkeys_file_read() -> Result<Hotkeys, String> {
         let hot = Hotkeys::new();
         let serialized = serde_json::to_string(&hot).map_err(|err| format!("Serialization error: {}", err))?;
@@ -93,6 +106,7 @@ pub mod utils {
         if !new_dir.exists() {
             fs::create_dir_all(&new_dir).map_err(|err| format!("Error creating directory: {}", err))?;
     
+>>>>>>> main
             // First time creation
             let mut file = File::create(&file_path).map_err(|err| format!("Error creating file: {}", err))?;
             file.write_all(serialized.as_bytes()).map_err(|err| format!("Error writing to file: {}", err))?;
@@ -102,33 +116,7 @@ pub mod utils {
             println!("File already exists.");
             let file = File::open(&file_path).map_err(|err| format!("Error opening file: {}", err))?;
             let reader = BufReader::new(file);
-            let hotkeys: Result<Hotkeys, _> = serde_json::from_reader(reader).map_err(|err| format!("Deserialization error: {}", err));
-            return Ok(hotkeys?);
-        }
-    
-        Ok(hot)
-    }
-
- pub fn default_path_file_read() -> Result<String, String> {
-        let df = format!("{}", UserDirs::new().clone().unwrap().picture_dir().unwrap().to_str().unwrap());
-        let serialized = serde_json::to_string(&df).map_err(|err| format!("Serialization error: {}", err))?;
-
-        let dir = directories::BaseDirs::new().ok_or("Error getting base directories")?;
-        let new_dir = PathBuf::from(format!("{}/{}", dir.data_local_dir().to_str().ok_or("Error getting data local dir")?, "ezScreenshots"));
-        let file_path = new_dir.join("default_path.config");
-
-        if !new_dir.exists() {
-            fs::create_dir_all(&new_dir).map_err(|err| format!("Error creating directory: {}", err))?;
-
-            // First time creation
-            let mut file = File::create(&file_path).map_err(|err| format!("Error creating file: {}", err))?;
-            file.write_all(serialized.as_bytes()).map_err(|err| format!("Error writing to file: {}", err))?;
-            println!("File created and serialized: {:?}", file_path);
-        } else {
-            // File already exists, so read the file
-            println!("File already exists.");
-            let file = File::open(&file_path).map_err(|err| format!("Error opening file: {}", err))?;
-            let reader = BufReader::new(file);
+<<<<<<< HEAD
             let default_path: Result<String, _> = serde_json::from_reader(reader).map_err(|err| format!("Deserialization error: {}", err));
             return Ok(default_path?);
         }
@@ -168,3 +156,14 @@ pub mod utils {
             }
         }
     }
+=======
+            let hotkeys: Result<Hotkeys, _> = serde_json::from_reader(reader).map_err(|err| format!("Deserialization error: {}", err));
+            return Ok(hotkeys?);
+        }
+    
+        Ok(hot)
+    }
+
+}
+
+>>>>>>> main
