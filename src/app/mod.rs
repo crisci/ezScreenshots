@@ -52,6 +52,7 @@ pub struct App {
     temp_hotkeys: Hotkeys,
     hotkeys_modification: HotkeysMap,
     hotkeys_error_message: Option<String>,
+    clipboard_success_message: Option<String>,
     // Modal to be shown
     modal: Modals
 }
@@ -137,6 +138,7 @@ pub enum Message {
     Quit,
     PathSelected,
     SetDefaultPath,
+    None
 }
 
 
@@ -180,6 +182,7 @@ impl Application for App {
                         modal: Modals::None,
                         hotkeys_error_message: None,
                         temp_hotkeys: hotkeys_saved.clone(),
+                        clipboard_success_message: None,
                     },
                      Command::none())
     }
@@ -300,9 +303,18 @@ impl Application for App {
                 Command::none()
             },
             Message::CopyToClipboard => {
-                copy_to_clipboard(&self.screenshot);
-                println!("Copied");  
-                Command::none()
+                return match copy_to_clipboard(&self.screenshot) {
+                    Ok(_) => {
+                        return match self.clipboard_success_message {
+                            None => {
+                                self.clipboard_success_message = Some("Screenshot copied to clipboard!".to_string());
+                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(2000)), |_| {Message::None})
+                            },
+                            _ => Command::none()
+                        };
+                    },/*set copy message*/
+                    _ => Command::none()
+                };
             }
             Message::HotkeysSave => {
                 self.hotkeys = self.temp_hotkeys.clone();
@@ -322,7 +334,8 @@ impl Application for App {
                 save_default_path(self.default_path.clone()).unwrap();
                 self.modal = Modals::None;
                 Command::none()
-            }
+            },
+            Message::None => {self.clipboard_success_message = None; Command::none()}
         };
 
     }
@@ -399,13 +412,20 @@ impl Application for App {
             bottom_container = bottom_container.spacing(10).push(Space::new(55, 55)).align_items(Alignment::Center);
         }
 
+        let notification = if let Some(t) = &self.clipboard_success_message {
+            text(t)
+        } else {
+            text("")
+        };
+
         let body = column![
             image_container
                 .center_x()
                 .center_y(),
+                container(notification).width(Length::Fill).center_x().center_y().padding([0,0,16,0]),
             container(
                 bottom_container
-            )
+            ).padding([0,0,8,0])
                 .align_x(alignment::Horizontal::Center)
                 .width(Length::FillPortion(1))
                 .center_x()

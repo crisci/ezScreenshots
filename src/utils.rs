@@ -14,7 +14,7 @@ pub mod utils {
     use image::{ColorType, EncodableLayout, RgbaImage};
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
-    use arboard::{Clipboard, ImageData};
+    use arboard::{Clipboard, ImageData, Error};
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -153,15 +153,21 @@ pub mod utils {
         Ok(())
     }
 
-pub fn copy_to_clipboard(image: &Option<RgbaImage>) {
-        let mut ctx = Clipboard::new().unwrap();
-        let binding = image.clone().unwrap();
-        let img = ImageData {
-            width: binding.width() as usize,
-            height: binding.height() as usize,
-            bytes: Cow::from(binding.as_bytes())
+pub fn copy_to_clipboard(image: &Option<RgbaImage>) -> Result<(), Box<dyn std::error::Error>> {
+        let mut ctx = Clipboard::new()?;
+        let binding = image.clone();
+        return match binding {
+            Some(b) => {
+                let img = ImageData {
+                    width: b.width() as usize,
+                    height: b.height() as usize,
+                    bytes: Cow::from(b.as_bytes())
+                };
+                ctx.set_image(img)?;
+                Ok(())
+            },
+            _ => Err(Box::new(Error::ContentNotAvailable))
         };
-        ctx.set_image(img).unwrap();
     }
 }
     pub fn select_path() -> Option<String>{

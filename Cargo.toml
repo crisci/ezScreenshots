@@ -17,5 +17,6 @@ chrono = "0.4.31"
 directories = "5.0.1"
 nfd = "0.0.4"
 serde_json = { version = "1.0.108", features = [] }
-serde = "1.0.193"
+serde = { version = "1.0", features = ["derive"] }
 arboard = "3.3.0"
+anyhow = { version = "1.0", default-features = false }

@@ -1072,6 +1072,7 @@ dependencies = [
 name = "ez_screenshots"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "arboard",
  "chrono",
  "dark-light",
