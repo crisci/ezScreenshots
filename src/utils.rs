@@ -111,7 +111,6 @@ pub mod utils {
         Ok(hot)
     }
 
-    // Function to copy an RgbaImage to the clipboard using iced::clipboard::write
     pub fn copy_to_clipboard(image: &Option<RgbaImage>) {
         let mut ctx = Clipboard::new().unwrap();
         let binding = image.clone().unwrap();
@@ -122,5 +121,7 @@ pub mod utils {
         };
         ctx.set_image(img).unwrap();
     }
+
+
 }
 
