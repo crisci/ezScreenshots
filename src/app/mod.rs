@@ -244,7 +244,8 @@ impl Application for App {
             Message::OpenSaveAsModal => { self.modal = Modals::SaveAs; Command::none() },
             Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
             Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()}
-            Message::CloseModal => { 
+            Message::CloseModal => {
+                if self.modal == Modals::SaveAs || self.modal == Modals::SetPath {self.save_path = self.default_path.clone()}
                 self.temp = self.delay_time;
                 self.temp_hotkeys = self.hotkeys.clone();
                 self.modal = Modals::None; 
@@ -252,10 +253,6 @@ impl Application for App {
                 Command::none() 
             },
 	    Message::OpenSetPathModal => { self.modal = Modals::SetPath; Command::none()},
-            Message::CloseModal => {
-                if self.modal == Modals::SaveAs || self.modal == Modals::SetPath {self.save_path = self.default_path.clone()}
-                    {self.modal = Modals::None;Command::none() }
-                },
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
