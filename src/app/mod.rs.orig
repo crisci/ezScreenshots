@@ -1,8 +1,11 @@
+<<<<<<< HEAD
 use directories::UserDirs;
+=======
 use std::fs::{File, self};
 use std::path::PathBuf;
 
 use iced::futures::stream::SelectWithStrategy;
+>>>>>>> main
 use iced::subscription::{events_with};
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
@@ -10,7 +13,7 @@ use iced::widget::space::Space;
 use iced::window::Mode;
 use iced_aw::{ modal };
 use screenshots::image::RgbaImage;
-use iced_aw::native::Spinner;
+use iced_aw::native::{Spinner};
 use nfd::{open_pick_folder,Response};
 
 use crate::custom_widgets::{image_button};
@@ -132,10 +135,13 @@ pub enum Message {
     HotkeysSave,
     KeyboardComb(char),
     OpenHotkeysModal,
-    ChangeHotkey(HotkeysMap),
-    Quit,
+<<<<<<< HEAD
     PathSelected,
     SetDefaultPath,
+=======
+    ChangeHotkey(HotkeysMap),
+    Quit
+>>>>>>> main
 }
 
 
@@ -146,17 +152,20 @@ impl Application for App {
     type Theme = Theme;
     type Flags = ();
 
+
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let mut vec = Vec::with_capacity(10);
-	
-	let hotkeys_saved = match hotkeys_file_read() {
-            Ok(hk) => hk,
-            _ => Hotkeys::new()
-        };
-	
+
+<<<<<<< HEAD
         let path = match default_path_file_read() {
             Ok(dp) => dp,
             _ => format!("{}", UserDirs::new().unwrap().picture_dir().unwrap().to_str().unwrap())
+=======
+        // TODO: create or read by a folder to get the hotkeys settings
+        let hotkeys_saved = match hotkeys_file_read() {
+            Ok(hk) => hk,
+            _ => Hotkeys::new()
+>>>>>>> main
         };
 
 
@@ -243,6 +252,14 @@ impl Application for App {
             },
             Message::OpenSaveAsModal => { self.modal = Modals::SaveAs; Command::none() },
             Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
+<<<<<<< HEAD
+            Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()},
+            Message::OpenSetPathModal => { self.modal = Modals::SetPath; Command::none()},
+            Message::CloseModal => {
+                if self.modal == Modals::SaveAs || self.modal == Modals::SetPath {self.save_path = self.default_path.clone()}
+                    {self.modal = Modals::None;Command::none() }
+                },
+=======
             Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()}
             Message::CloseModal => { 
                 self.temp = self.delay_time;
@@ -251,11 +268,7 @@ impl Application for App {
                 self.hotkeys_modification = HotkeysMap::None; 
                 Command::none() 
             },
-	    Message::OpenSetPathModal => { self.modal = Modals::SetPath; Command::none()},
-            Message::CloseModal => {
-                if self.modal == Modals::SaveAs || self.modal == Modals::SetPath {self.save_path = self.default_path.clone()}
-                    {self.modal = Modals::None;Command::none() }
-                },
+>>>>>>> main
             Message::SaveAsButtonPressed => {
                 if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
                 let screenshot = self.screenshot.clone().unwrap();
@@ -296,7 +309,15 @@ impl Application for App {
                     return Command::none();
                 }
             },
-	   Message::ChangeHotkey(hotkey) => {
+<<<<<<< HEAD
+            Message::PathSelected => {self.save_path = select_path().unwrap(); Command::none()}
+            Message::SetDefaultPath => {
+                self.default_path = self.save_path();
+                save_default_path(self.default_path.clone()).unwrap();
+                self.modal = Modals::None;
+                Command::none()
+=======
+            Message::ChangeHotkey(hotkey) => {
                 println!("{:?}", hotkey);
                 self.hotkeys_modification = hotkey;
                 Command::none()
@@ -312,15 +333,10 @@ impl Application for App {
             },
             Message::Quit => {
                 std::process::exit(0)
-            },
-	    Message::PathSelected => {self.save_path = select_path().unwrap(); Command::none()}
-            Message::SetDefaultPath => {
-                self.default_path = self.save_path();
-                save_default_path(self.default_path.clone()).unwrap();
-                self.modal = Modals::None;
-                Command::none()
+>>>>>>> main
             }
         };
+
 
     }
     fn view(&self) ->  Element<'_, Self::Message, Renderer<Self::Theme>> {

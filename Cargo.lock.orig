@@ -1062,7 +1062,10 @@ dependencies = [
  "image",
  "nfd",
  "screenshots",
+<<<<<<< HEAD
+=======
  "serde",
+>>>>>>> main
  "serde_json",
  "tokio",
  "tracing-subscriber",
@@ -3101,9 +3104,15 @@ dependencies = [
 
 [[package]]
 name = "ryu"
+<<<<<<< HEAD
 version = "1.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f98d2aa92eebf49b69786be48e4477826b256916e84a57ff2a4f21923b48eb4c"
+=======
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ad4cc8da4ef723ed60bced201181d83791ad433213d8c24efffda1eec85d741"
+>>>>>>> main
 
 [[package]]
 name = "scoped-tls"
