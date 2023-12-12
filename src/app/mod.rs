@@ -1,11 +1,11 @@
 use directories::UserDirs;
 
 use iced::subscription::events_with;
-use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font};
+use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font, Font};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::widget::space::Space;
 use iced::window::Mode;
-use iced_aw::modal;
+use iced_aw::{modal, SelectionList, SelectionListStyles};
 use screenshots::image::RgbaImage;
 use iced_aw::native::Spinner;
 
@@ -50,7 +50,10 @@ pub struct App {
     hotkeys_error_message: Option<String>,
     clipboard_success_message: Option<String>,
     // Modal to be shown
-    modal: Modals
+    modal: Modals,
+    //Multimonitor
+    screens: Vec<String>,
+    display_selected: usize
 }
 
 impl App {
@@ -89,6 +92,8 @@ impl App {
                         hotkeys_error_message: None,
                         temp_hotkeys: hotkeys_saved.clone(),
                         clipboard_success_message: None,
+                        display_selected: 0,
+                        screens: (1..=num_of_screens()).map(|u| u.to_string()).collect(),
                     }
     }
 
@@ -117,6 +122,7 @@ impl App {
         self.temp_hotkeys.clone()
     }
 
+    pub(crate) fn display_selected(&self) -> usize {self.display_selected}
     pub(crate) fn set_screenshot(&mut self, screenshot: Option<RgbaImage>) {
         self.screenshot = screenshot
     }
@@ -165,6 +171,7 @@ pub enum Message {
     Quit,
     PathSelected,
     SetDefaultPath,
+    MonitorSelected(usize, String),
     None,
     Loaded(Result<(), String>),
     FontLoaded(Result<(), font::Error>),
@@ -288,15 +295,15 @@ impl Application for BootstrapApp {
                     Message::DelayChanged(value) => {app.temp = value; Command::none()}
                     Message::SettingSave => { app.delay_time = app.temp; app.modal = Modals::None; Command::none() },
                     Message::KeyboardComb(event)  => {
-                        if app.hotkeys_modification == HotkeysMap::None {
+                        return if app.hotkeys_modification == HotkeysMap::None {
                             if app.modal == Modals::None {
                                 if let Some(m) = app.hotkeys.to_message(event) {
-                                    return Command::perform(async {}, |_| {m});
+                                    Command::perform(async {}, |_| { m })
                                 } else {
-                                    return Command::none();
+                                    Command::none()
                                 }
                             } else {
-                                return Command::none();
+                                Command::none()
                             }
                         } else {
                             //Change the hotkey
@@ -309,7 +316,7 @@ impl Application for BootstrapApp {
                                 app.hotkeys_modification = HotkeysMap::None;
                                 app.hotkeys_error_message = None
                             }
-                            return Command::none();
+                            Command::none()
                         }
                     },
                Message::ChangeHotkey(hotkey) => {
@@ -350,6 +357,7 @@ impl Application for BootstrapApp {
                         Command::none()
                     },
                     Message::None => {app.clipboard_success_message = None; Command::none()},
+                    Message::MonitorSelected(index, _) => {app.display_selected = index; println!("{}", index); Command::none()}
                     _ => Command::none()
                 };
             }
@@ -372,6 +380,17 @@ impl Application for BootstrapApp {
             .into(),
             BootstrapApp::Loaded(app) => {
                 let menu = top_menu(app);
+                let selection_list: SelectionList<_, Message> = SelectionList::new_with(
+                    &app.screens,
+                    Message::MonitorSelected,
+                    16.0,
+                    5.0,
+                    SelectionListStyles::Default,
+                    app.manual_select(),
+                    Font::default(),
+                )
+                    .width(Length::Shrink)
+                    .height(Length::Shrink);
                 let image: Element<Message> = if let Some(screenshot) = &app.screenshot
                 {
                     image(image::Handle::from_pixels(
@@ -414,7 +433,7 @@ impl Application for BootstrapApp {
                     let drag_button = image_button("drag", "Resize", Message::Resize);
                     let delete_button = image_button("delete", "Delete", Message::Drop);
                     let save_button = image_button("save", "Save", Message::MenuAction(Modals::Save));
-                    row![drag_button].spacing(10).push(delete_button).spacing(10).push(screenshot_button).spacing(10).push(save_button).align_items(Alignment::Center)
+                    row![drag_button].spacing(10).push(delete_button).spacing(10).push(screenshot_button).push(selection_list).spacing(10).push(save_button).align_items(Alignment::Center)
                 } else {
                     row![Space::new(55, 55)].spacing(10).push(screenshot_button).align_items(Alignment::Center)
                 };

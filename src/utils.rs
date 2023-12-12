@@ -19,7 +19,7 @@ pub mod utils {
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
         let screens = Screen::all().unwrap();
-        let image = screens[0].capture().unwrap();
+        let image = screens[target.display_selected()].capture().unwrap();
         target.set_screenshot(Some(image));
     }
 
@@ -163,7 +163,12 @@ pub fn copy_to_clipboard(image: &Option<RgbaImage>) -> Result<(), Box<dyn std::e
             _ => Err(Box::new(Error::ContentNotAvailable))
         };
     }
-}
+
+    pub fn num_of_screens() -> usize {
+        let screen = Screen::all().unwrap();
+        screen.len()
+    }
+ }
     pub fn select_path() -> Option<String>{
         let result = open_pick_folder(None);
         match result {
