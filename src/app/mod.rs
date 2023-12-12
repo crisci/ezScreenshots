@@ -1,21 +1,17 @@
 use directories::UserDirs;
-use std::fs::{File, self};
-use std::path::PathBuf;
 
-use iced::futures::stream::SelectWithStrategy;
-use iced::subscription::{events_with};
+use iced::subscription::events_with;
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::widget::space::Space;
 use iced::window::Mode;
-use iced_aw::{ modal };
+use iced_aw::modal;
 use screenshots::image::RgbaImage;
 use iced_aw::native::Spinner;
-use nfd::{open_pick_folder,Response};
 
-use crate::custom_widgets::{image_button};
+use crate::custom_widgets::image_button;
 use crate::hotkeys::hotkeys_logic::{Hotkeys, HotkeysMap};
-use crate::menu::{top_menu};
+use crate::menu::top_menu;
 use crate::resize::Modal;
 
 use crate::app::SaveState::{Nothing, OnGoing};
@@ -27,7 +23,7 @@ use crate::modals::setdefaultpath_modal::setpath_modal;
 use iced::keyboard::{self};
 use crate::modals::settings_modal::settings_modal;
 
-use iced::event::{Event};
+use iced::event::Event;
 use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
 use crate::utils::select_path;
@@ -52,6 +48,7 @@ pub struct App {
     temp_hotkeys: Hotkeys,
     hotkeys_modification: HotkeysMap,
     hotkeys_error_message: Option<String>,
+    clipboard_success_message: Option<String>,
     // Modal to be shown
     modal: Modals
 }
@@ -69,10 +66,6 @@ impl App {
         self.save_path.clone()
     }
 
-    pub(crate) fn default_path(&self) -> String {
-        self.default_path.clone()
-    }
-
     pub(crate) fn save_state(&self) -> SaveState {
         self.save_state.clone()
     }
@@ -80,10 +73,6 @@ impl App {
     pub(crate) fn delay_time(&self) -> f32 { self.delay_time }
 
     pub(crate) fn temp(&self) -> f32  { self.temp }
-
-    pub(crate) fn hotkeys(&self) -> Hotkeys {
-        self.hotkeys.clone()
-    }
 
     pub(crate) fn temp_hotkeys(&self) -> Hotkeys {
         self.temp_hotkeys.clone()
@@ -132,10 +121,12 @@ pub enum Message {
     HotkeysSave,
     KeyboardComb(char),
     OpenHotkeysModal,
+    CopyToClipboard,
     ChangeHotkey(HotkeysMap),
     Quit,
     PathSelected,
     SetDefaultPath,
+    None
 }
 
 
@@ -179,6 +170,7 @@ impl Application for App {
                         modal: Modals::None,
                         hotkeys_error_message: None,
                         temp_hotkeys: hotkeys_saved.clone(),
+                        clipboard_success_message: None,
                     },
                      Command::none())
     }
@@ -298,6 +290,20 @@ impl Application for App {
                 self.hotkeys_modification = hotkey;
                 Command::none()
             },
+            Message::CopyToClipboard => {
+                return match copy_to_clipboard(&self.screenshot) {
+                    Ok(_) => {
+                        return match self.clipboard_success_message {
+                            None => {
+                                self.clipboard_success_message = Some("Screenshot copied to clipboard!".to_string());
+                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(2000)), |_| {Message::None})
+                            },
+                            _ => Command::none()
+                        };
+                    },/*set copy message*/
+                    _ => Command::none()
+                };
+            }
             Message::HotkeysSave => {
                 self.hotkeys = self.temp_hotkeys.clone();
                 self.temp_hotkeys = self.hotkeys.clone();
@@ -316,7 +322,8 @@ impl Application for App {
                 save_default_path(self.default_path.clone()).unwrap();
                 self.modal = Modals::None;
                 Command::none()
-            }
+            },
+            Message::None => {self.clipboard_success_message = None; Command::none()}
         };
 
     }
@@ -393,13 +400,20 @@ impl Application for App {
             bottom_container = bottom_container.spacing(10).push(Space::new(55, 55)).align_items(Alignment::Center);
         }
 
+        let notification = if let Some(t) = &self.clipboard_success_message {
+            text(t)
+        } else {
+            text("")
+        };
+
         let body = column![
             image_container
                 .center_x()
                 .center_y(),
+                container(notification).width(Length::Fill).center_x().center_y().padding([0,0,16,0]),
             container(
                 bottom_container
-            )
+            ).padding([0,0,8,0])
                 .align_x(alignment::Horizontal::Center)
                 .width(Length::FillPortion(1))
                 .center_x()

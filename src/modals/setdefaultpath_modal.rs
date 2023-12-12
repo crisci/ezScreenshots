@@ -1,11 +1,10 @@
 use iced::{Alignment, Length};
 use iced::widget::{Column, Row, Text,container};
-use iced_aw::{Card};
+use iced_aw::Card;
 use crate::app::{App, Message};
 use crate::custom_widgets::{image_button, rounded_button};
 
 pub fn setpath_modal(app: &App) -> Option<Card<Message>> {
-    let set_default= true;
     let choose_path = container(Row::new()
         .spacing(10)
         .push(Text::new(app.save_path()).width(Length::FillPortion(6)))

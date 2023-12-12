@@ -15,10 +15,13 @@ iced_aw = { version = "0.7.0", default-features = false, features = [ "menu", "q
 image = { version = "0.24.7", features = ["png", "gif", "jpeg"] }
 chrono = "0.4.31"
 directories = "5.0.1"
-<<<<<<< HEAD
 nfd = "0.0.4"
 serde_json = { version = "1.0.108", features = [] }
+<<<<<<< HEAD
+serde = "1.0.193"
+gif = "0.12.0"
 =======
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+arboard = "3.3.0"
+anyhow = { version = "1.0", default-features = false }
 >>>>>>> main
