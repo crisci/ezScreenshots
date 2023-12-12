@@ -54,6 +54,45 @@ pub struct App {
 }
 
 impl App {
+
+    pub fn new() -> Self {
+        let mut vec = Vec::with_capacity(10);
+	
+	let hotkeys_saved = match hotkeys_file_read() {
+            Ok(hk) => hk,
+            _ => Hotkeys::new()
+        };
+	
+        let path = match default_path_file_read() {
+            Ok(dp) => dp,
+            _ => format!("{}", UserDirs::new().unwrap().picture_dir().unwrap().to_str().unwrap())
+        };
+
+
+        for i in Formats::ALL.iter() {
+            vec.push(format!("{i}"))
+        }
+                    Self {
+                        screenshot: None,
+                        resize: false,
+                        default_path: path.clone(),
+                        save_path: path,
+                        save_state: SaveState::Nothing,
+                        formats: vec,
+                        export_format: Formats::Png,
+                        manual_select: Some(0),
+                        delay_time: 0.,
+                        temp: 0.0,
+                        hotkeys: hotkeys_saved.clone(),
+                        hotkeys_modification: HotkeysMap::None,
+                        modal: Modals::None,
+                        hotkeys_error_message: None,
+                        temp_hotkeys: hotkeys_saved.clone(),
+                        clipboard_success_message: None,
+                    }
+    }
+
+
     pub(crate) fn formats(&self) -> &Vec<String> {
         &self.formats
     }
@@ -167,7 +206,7 @@ impl Application for BootstrapApp {
         match self {
             BootstrapApp::Loading => {
                 if let Message::Loaded(_) = message {
-                    *self = BootstrapApp::Loaded(App::default()) // TODO: Implement default for app
+                    *self = BootstrapApp::Loaded(App::new()) // TODO: Implement default for app
                 }
             }
             BootstrapApp::Loaded(app) => {
