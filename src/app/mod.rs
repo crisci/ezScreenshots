@@ -258,7 +258,6 @@ impl Application for BootstrapApp {
                     },
                     Message::ScreenshotSaved(res) => {
                         if res.is_err() {panic!("{:?}", res.err())}
-                        println!("DONE");
                         app.save_state = SaveState::Done;
                         Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init)
                     },
@@ -301,7 +300,6 @@ impl Application for BootstrapApp {
                             }
                         } else {
                             //Change the hotkey
-                            println!("{:?} Changed with {}", app.hotkeys_modification, event);
                             //Check that the char inserted is not already used
                             if app.temp_hotkeys.char_already_used(event) {
                                 app.hotkeys_error_message = Some("Combination already in use".to_string());
@@ -315,7 +313,6 @@ impl Application for BootstrapApp {
                         }
                     },
                Message::ChangeHotkey(hotkey) => {
-                        println!("{:?}", hotkey);
                         app.hotkeys_modification = hotkey;
                         Command::none()
                     },

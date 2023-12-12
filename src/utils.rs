@@ -96,10 +96,8 @@ pub mod utils {
             // First time creation
             let mut file = File::create(&file_path).map_err(|err| format!("Error creating file: {}", err))?;
             file.write_all(serialized.as_bytes()).map_err(|err| format!("Error writing to file: {}", err))?;
-            println!("File created and serialized: {:?}", file_path);
         } else {
             // File already exists, so read the file
-            println!("File already exists.");
             let file = File::open(&file_path).map_err(|err| format!("Error opening file: {}", err))?;
             let reader = BufReader::new(file);
             let hotkeys: Result<Hotkeys, _> = serde_json::from_reader(reader).map_err(|err| format!("Deserialization error: {}", err));
@@ -123,10 +121,8 @@ pub mod utils {
             // First time creation
             let mut file = File::create(&file_path).map_err(|err| format!("Error creating file: {}", err))?;
             file.write_all(serialized.as_bytes()).map_err(|err| format!("Error writing to file: {}", err))?;
-            println!("File created and serialized: {:?}", file_path);
         } else {
             // File already exists, so read the file
-            println!("File already exists.");
             let file = File::open(&file_path).map_err(|err| format!("Error opening file: {}", err))?;
             let reader = BufReader::new(file);
             let default_path: Result<String, _> = serde_json::from_reader(reader).map_err(|err| format!("Deserialization error: {}", err));
