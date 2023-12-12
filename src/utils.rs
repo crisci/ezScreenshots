@@ -10,9 +10,11 @@ pub mod utils {
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
-    use image::{ColorType, RgbaImage};
+    use image::{ColorType, DynamicImage, ImageFormat, RgbaImage};
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
+    use gif::{Frame,Encoder};
+
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -64,22 +66,20 @@ pub mod utils {
     }
 
     pub async fn save_to_gif(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+        let frame = gif::Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.into_raw(),30);
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
         let path_image = format!("{}/SCRN_{}.gif", path, string_time);
+        let mut file_out = File::create(path_image.clone()).unwrap();
         tokio::task::spawn_blocking(move || {
-            img::save_buffer(
-                &path_image,
-                &screenshot.clone().into_raw(),
-                screenshot.width(),
-                screenshot.height(),
-                ColorType::Rgba8,
-            )
-                .map(|_| path)
-                .map_err(|err| ExportError(format!("{err:?}")))
-        })
-            .await
-            .expect("Blocking task to finish")
+            let mut encoder = gif::Encoder::new(&mut file_out, frame.width, frame.height, &[]).unwrap();
+        encoder.write_frame(&frame)
+            .map(|_| path_image)
+            .map_err(|err| ExportError(format!("{err:?}")))
+    })
+    .await
+    .expect("Blocking task to finish")
+
     }
 
     pub fn hotkeys_file_read() -> Result<Hotkeys, String> {
@@ -163,7 +163,7 @@ pub mod utils {
             Ok(Response::Cancel) => {
                 None
             },
-            Err(error) => {
+            Err(_error) => {
                 panic!("Error selection folder");
             }
         }
