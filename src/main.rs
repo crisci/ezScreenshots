@@ -10,5 +10,5 @@ mod modals;
 
 pub fn main() -> iced::Result {
     tracing_subscriber::fmt::init();
-    app::App::run(iced::Settings::default())
+    app::BootstrapApp::run(iced::Settings::default())
 }
