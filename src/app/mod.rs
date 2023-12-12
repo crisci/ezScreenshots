@@ -1,7 +1,7 @@
 use directories::UserDirs;
 
 use iced::subscription::events_with;
-use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription};
+use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font};
 use iced::widget::{container, column, row, text, svg, image, Row};
 use iced::widget::space::Space;
 use iced::window::Mode;
@@ -29,7 +29,7 @@ use crate::modals::Modals;
 use crate::utils::select_path;
 
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct App {
     screenshot: Option<RgbaImage>,
     resize: bool,
@@ -54,6 +54,45 @@ pub struct App {
 }
 
 impl App {
+
+    pub fn new() -> Self {
+        let mut vec = Vec::with_capacity(10);
+	
+	let hotkeys_saved = match hotkeys_file_read() {
+            Ok(hk) => hk,
+            _ => Hotkeys::new()
+        };
+	
+        let path = match default_path_file_read() {
+            Ok(dp) => dp,
+            _ => format!("{}", UserDirs::new().unwrap().picture_dir().unwrap().to_str().unwrap())
+        };
+
+
+        for i in Formats::ALL.iter() {
+            vec.push(format!("{i}"))
+        }
+                    Self {
+                        screenshot: None,
+                        resize: false,
+                        default_path: path.clone(),
+                        save_path: path,
+                        save_state: SaveState::Nothing,
+                        formats: vec,
+                        export_format: Formats::Png,
+                        manual_select: Some(0),
+                        delay_time: 0.,
+                        temp: 0.0,
+                        hotkeys: hotkeys_saved.clone(),
+                        hotkeys_modification: HotkeysMap::None,
+                        modal: Modals::None,
+                        hotkeys_error_message: None,
+                        temp_hotkeys: hotkeys_saved.clone(),
+                        clipboard_success_message: None,
+                    }
+    }
+
+
     pub(crate) fn formats(&self) -> &Vec<String> {
         &self.formats
     }
@@ -126,320 +165,329 @@ pub enum Message {
     Quit,
     PathSelected,
     SetDefaultPath,
-    None
+    None,
+    Loaded(Result<(), String>),
+    FontLoaded(Result<(), font::Error>),
+}
+
+#[derive(Debug)]
+pub enum BootstrapApp {
+    Loading,
+    Loaded(App),
+}
+
+async fn load() -> Result<(), String> {
+    Ok(())
 }
 
 
-
-impl Application for App {
+impl Application for BootstrapApp {
     type Executor = executor::Default;
     type Message = Message;
     type Theme = Theme;
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let mut vec = Vec::with_capacity(10);
-	
-	let hotkeys_saved = match hotkeys_file_read() {
-            Ok(hk) => hk,
-            _ => Hotkeys::new()
-        };
-	
-        let path = match default_path_file_read() {
-            Ok(dp) => dp,
-            _ => format!("{}", UserDirs::new().unwrap().picture_dir().unwrap().to_str().unwrap())
-        };
-
-
-        for i in Formats::ALL.iter() {
-            vec.push(format!("{i}"))
-        }
-                    (Self {
-                        screenshot: None,
-                        resize: false,
-                        default_path: path.clone(),
-                        save_path: path,
-                        save_state: SaveState::Nothing,
-                        formats: vec,
-                        export_format: Formats::Png,
-                        manual_select: Some(0),
-                        delay_time: 0.,
-                        temp: 0.0,
-                        hotkeys: hotkeys_saved.clone(),
-                        hotkeys_modification: HotkeysMap::None,
-                        modal: Modals::None,
-                        hotkeys_error_message: None,
-                        temp_hotkeys: hotkeys_saved.clone(),
-                        clipboard_success_message: None,
-                    },
-                     Command::none())
+        (
+            BootstrapApp::Loading,
+            Command::batch(vec![
+                font::load(iced_aw::graphics::icons::ICON_FONT_BYTES).map(Message::FontLoaded),
+                Command::perform(load(), Message::Loaded),
+            ]),
+        )
     }
 
     fn title(&self) -> String {
         String::from("📷 Screenshots")
     }
+    
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        self.resize = false;
-        return match message {
-            Message::Init => {
-                self.save_path = self.default_path.clone();
-                self.manual_select = Some(0);
-                self.modal = Modals::None;
-                self.export_format = Formats::Png;
-                self.save_state = Nothing;
-                self.temp = self.delay_time;
-                self.temp_hotkeys = self.hotkeys.clone();
-                Command::none()
-            },
-            Message::MenuAction(action) => {
-                if self.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys && action != Modals::SetPath{println!("Screenshot not available"); return Command::none()};
-                match action {
-                    Modals::Save => {
-                        let path = self.save_path.clone();
-                        let screenshot = self.screenshot.clone().unwrap();
-                        self.save_state = OnGoing;
-                        Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
+        match self {
+            BootstrapApp::Loading => {
+                if let Message::Loaded(_) = message {
+                    *self = BootstrapApp::Loaded(App::new()) // TODO: Implement default for app
+                }
+            }
+            BootstrapApp::Loaded(app) => {
+                return match message {
+                    Message::Init => {
+                        app.save_path = app.default_path.clone();
+                        app.manual_select = Some(0);
+                        app.modal = Modals::None;
+                        app.export_format = Formats::Png;
+                        app.save_state = Nothing;
+                        app.temp = app.delay_time;
+                        app.temp_hotkeys = app.hotkeys.clone();
+                        Command::none()
                     },
-                    Modals::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
-                    Modals::Settings => {
-                        self.temp = self.delay_time;
-                        Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenSettingsModal) },
-                    Modals::Hotkeys => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenHotkeysModal ),
-                    Modals::SetPath => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSetPathModal ),
-                    _ => Command::none()
-                }
-            },
-            Message::Screenshot => {
-                let change_mode = window::change_mode(window::Mode::Hidden);
-                let wait = Command::perform(tokio::time::sleep(std::time::Duration::from_millis(20)), |_| Message::WindowHidden);
-                Command::batch(vec![change_mode, wait])
-            },
-            Message::WindowHidden => {
-                screenshot(self);
-                window::change_mode(Mode::Windowed)
-            },
-            Message::Drop => {
-                self.screenshot = None;
-                Command::none()
-            },
-            Message::Resize => {
-                self.resize = true;
-                Command::none()
-            },
-            Message::ScreenshotSaved(res) => {
-                if res.is_err() {panic!("{:?}", res.err())}
-                println!("DONE");
-                self.save_state = SaveState::Done;
-                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init)
-            },
-            Message::OpenSaveAsModal => { self.modal = Modals::SaveAs; Command::none() },
-            Message::OpenSettingsModal => { self.modal = Modals::Settings; Command::none() },
-            Message::OpenHotkeysModal => { self.modal = Modals::Hotkeys; Command::none()}
-            Message::CloseModal => {
-                if self.modal == Modals::SaveAs || self.modal == Modals::SetPath {self.save_path = self.default_path.clone()}
-                self.temp = self.delay_time;
-                self.temp_hotkeys = self.hotkeys.clone();
-                self.modal = Modals::None; 
-                self.hotkeys_modification = HotkeysMap::None; 
-                Command::none() 
-            },
-	    Message::OpenSetPathModal => { self.modal = Modals::SetPath; Command::none()},
-            Message::SaveAsButtonPressed => {
-                if self.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
-                let screenshot = self.screenshot.clone().unwrap();
-                let path = self.save_path.clone();
-                self.save_state = SaveState::OnGoing;
-                match self.export_format {
-                    Formats::Png => {Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)}
-                    Formats::Gif => {Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved)}
-                    Formats::Jpeg => {Command::perform(save_to_jpeg(screenshot, path), Message::ScreenshotSaved)}
-                }
-            },
-            Message::FormatSelected(_, format) => {self.export_format = Formats::from(format); self.manual_select = None; Command::none()},
-            Message::DelayChanged(value) => {self.temp = value; Command::none()}
-            Message::SettingSave => { self.delay_time = self.temp; self.modal = Modals::None; Command::none() },
-            Message::KeyboardComb(event)  => {
-                if self.hotkeys_modification == HotkeysMap::None {
-                    if self.modal == Modals::None {
-                        if let Some(m) = self.hotkeys.to_message(event) {
-                            return Command::perform(async {}, |_| {m});
+                    Message::MenuAction(action) => {
+                        if app.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys && action != Modals::SetPath{println!("Screenshot not available"); return Command::none()};
+                        match action {
+                            Modals::Save => {
+                                let path = app.save_path.clone();
+                                let screenshot = app.screenshot.clone().unwrap();
+                                app.save_state = OnGoing;
+                                Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
+                            },
+                            Modals::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
+                            Modals::Settings => {
+                                app.temp = app.delay_time;
+                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenSettingsModal) },
+                            Modals::Hotkeys => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenHotkeysModal ),
+                            Modals::SetPath => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSetPathModal ),
+                            _ => Command::none()
+                        }
+                    },
+                    Message::Screenshot => {
+                        let change_mode = window::change_mode(window::Mode::Hidden);
+                        let wait = Command::perform(tokio::time::sleep(std::time::Duration::from_millis(20)), |_| Message::WindowHidden);
+                        Command::batch(vec![change_mode, wait])
+                    },
+                    Message::WindowHidden => {
+                        screenshot(app);
+                        window::change_mode(Mode::Windowed)
+                    },
+                    Message::Drop => {
+                        app.screenshot = None;
+                        Command::none()
+                    },
+                    Message::Resize => {
+                        app.resize = true;
+                        Command::none()
+                    },
+                    Message::ScreenshotSaved(res) => {
+                        if res.is_err() {panic!("{:?}", res.err())}
+                        println!("DONE");
+                        app.save_state = SaveState::Done;
+                        Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init)
+                    },
+                    Message::OpenSaveAsModal => { app.modal = Modals::SaveAs; Command::none() },
+                    Message::OpenSettingsModal => { app.modal = Modals::Settings; Command::none() },
+                    Message::OpenHotkeysModal => { app.modal = Modals::Hotkeys; Command::none()}
+                    Message::CloseModal => {
+                        if app.modal == Modals::SaveAs || app.modal == Modals::SetPath {app.save_path = app.default_path.clone()}
+                        app.temp = app.delay_time;
+                        app.temp_hotkeys = app.hotkeys.clone();
+                        app.modal = Modals::None; 
+                        app.hotkeys_modification = HotkeysMap::None; 
+                        Command::none() 
+                    },
+                Message::OpenSetPathModal => { app.modal = Modals::SetPath; Command::none()},
+                    Message::SaveAsButtonPressed => {
+                        if app.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
+                        let screenshot = app.screenshot.clone().unwrap();
+                        let path = app.save_path.clone();
+                        app.save_state = SaveState::OnGoing;
+                        match app.export_format {
+                            Formats::Png => {Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)}
+                            Formats::Gif => {Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved)}
+                            Formats::Jpeg => {Command::perform(save_to_jpeg(screenshot, path), Message::ScreenshotSaved)}
+                        }
+                    },
+                    Message::FormatSelected(_, format) => {app.export_format = Formats::from(format); app.manual_select = None; Command::none()},
+                    Message::DelayChanged(value) => {app.temp = value; Command::none()}
+                    Message::SettingSave => { app.delay_time = app.temp; app.modal = Modals::None; Command::none() },
+                    Message::KeyboardComb(event)  => {
+                        if app.hotkeys_modification == HotkeysMap::None {
+                            if app.modal == Modals::None {
+                                if let Some(m) = app.hotkeys.to_message(event) {
+                                    return Command::perform(async {}, |_| {m});
+                                } else {
+                                    return Command::none();
+                                }
+                            } else {
+                                return Command::none();
+                            }
                         } else {
+                            //Change the hotkey
+                            println!("{:?} Changed with {}", app.hotkeys_modification, event);
+                            //Check that the char inserted is not already used
+                            if app.temp_hotkeys.char_already_used(event) {
+                                app.hotkeys_error_message = Some("Combination already in use".to_string());
+                            } else {
+                                //Assign temp structure
+                                app.temp_hotkeys.assign_new_value(event, app.hotkeys_modification.clone());
+                                app.hotkeys_modification = HotkeysMap::None;
+                                app.hotkeys_error_message = None
+                            }
                             return Command::none();
                         }
-                    } else {
-                        return Command::none();
-                    }
-                } else {
-                    //Change the hotkey
-                    println!("{:?} Changed with {}", self.hotkeys_modification, event);
-                    //Check that the char inserted is not already used
-                    if self.temp_hotkeys.char_already_used(event) {
-                        self.hotkeys_error_message = Some("Combination already in use".to_string());
-                    } else {
-                        //Assign temp structure
-                        self.temp_hotkeys.assign_new_value(event, self.hotkeys_modification.clone());
-                        self.hotkeys_modification = HotkeysMap::None;
-                        self.hotkeys_error_message = None
-                    }
-                    return Command::none();
-                }
-            },
-	   Message::ChangeHotkey(hotkey) => {
-                println!("{:?}", hotkey);
-                self.hotkeys_modification = hotkey;
-                Command::none()
-            },
-            Message::CopyToClipboard => {
-                return match copy_to_clipboard(&self.screenshot) {
-                    Ok(_) => {
-                        return match self.clipboard_success_message {
-                            None => {
-                                self.clipboard_success_message = Some("Screenshot copied to clipboard!".to_string());
-                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(2000)), |_| {Message::None})
-                            },
+                    },
+               Message::ChangeHotkey(hotkey) => {
+                        println!("{:?}", hotkey);
+                        app.hotkeys_modification = hotkey;
+                        Command::none()
+                    },
+                    Message::CopyToClipboard => {
+                        return match copy_to_clipboard(&app.screenshot) {
+                            Ok(_) => {
+                                return match app.clipboard_success_message {
+                                    None => {
+                                        app.clipboard_success_message = Some("Screenshot copied to clipboard!".to_string());
+                                        Command::perform(tokio::time::sleep(std::time::Duration::from_millis(2000)), |_| {Message::None})
+                                    },
+                                    _ => Command::none()
+                                };
+                            },/*set copy message*/
                             _ => Command::none()
                         };
-                    },/*set copy message*/
+                    }
+                    Message::HotkeysSave => {
+                        app.hotkeys = app.temp_hotkeys.clone();
+                        app.temp_hotkeys = app.hotkeys.clone();
+                        match app.hotkeys.save_hotkeys() {
+                            _ => ()
+                        };
+                        app.modal = Modals::None;
+                        Command::none()
+                    },
+                    Message::Quit => {
+                        std::process::exit(0)
+                    },
+                Message::PathSelected => {app.save_path = select_path().unwrap(); Command::none()}
+                    Message::SetDefaultPath => {
+                        app.default_path = app.save_path();
+                        save_default_path(app.default_path.clone()).unwrap();
+                        app.modal = Modals::None;
+                        Command::none()
+                    },
+                    Message::None => {app.clipboard_success_message = None; Command::none()},
                     _ => Command::none()
                 };
             }
-            Message::HotkeysSave => {
-                self.hotkeys = self.temp_hotkeys.clone();
-                self.temp_hotkeys = self.hotkeys.clone();
-                match self.hotkeys.save_hotkeys() {
-                    _ => ()
-                };
-                self.modal = Modals::None;
-                Command::none()
-            },
-            Message::Quit => {
-                std::process::exit(0)
-            },
-	    Message::PathSelected => {self.save_path = select_path().unwrap(); Command::none()}
-            Message::SetDefaultPath => {
-                self.default_path = self.save_path();
-                save_default_path(self.default_path.clone()).unwrap();
-                self.modal = Modals::None;
-                Command::none()
-            },
-            Message::None => {self.clipboard_success_message = None; Command::none()}
-        };
-
-    }
-    fn view(&self) ->  Element<'_, Self::Message, Renderer<Self::Theme>> {
-        let menu = top_menu(self);
-        let image: Element<Message> = if let Some(screenshot) = &self.screenshot
-        {
-            image(image::Handle::from_pixels(
-                screenshot.width(),
-                screenshot.height(),
-                screenshot.clone().into_raw(),
-            ))
-                .content_fit(ContentFit::Contain)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .into()
-        } else {
-            text("Press the button to take a screenshot!").into()
-        };
-        let mut image = row![image];
-        if self.resize {
-            println!("Resize on");
-            let handle = svg::Handle::from_path(format!(
-                "{}/resources/{}.svg",
-                env!("CARGO_MANIFEST_DIR"),
-                "resize"
-            ));
-
-            let svg = svg(handle)
-                .height(Length::from(self.screenshot.clone().unwrap().height() as u16))
-                .width(Length::from(self.screenshot.clone().unwrap().width() as u16));
-            image = row![Modal::new(image, svg)];
         }
+        Command::none()
+    }
 
-        let image_container = container(
-            image.padding(5)
-        ).center_x().center_y()
+
+    fn view(&self) ->  Element<'_, Self::Message, Renderer<Self::Theme>> {
+        return match self {
+            BootstrapApp::Loading => container(
+                text("Loading...")
+                    .horizontal_alignment(alignment::Horizontal::Center)
+                    .size(50),
+            )
             .width(Length::Fill)
             .height(Length::Fill)
+            .center_y()
             .center_x()
-            .center_y();
-
-        let screenshot_button = image_button("screenshot", "Screenshot", Message::Screenshot);
-        let button_row = if self.screenshot.is_some() {
-            let drag_button = image_button("drag", "Resize", Message::Resize);
-            let delete_button = image_button("delete", "Delete", Message::Drop);
-            let save_button = image_button("save", "Save", Message::MenuAction(Modals::Save));
-            row![drag_button].spacing(10).push(delete_button).spacing(10).push(screenshot_button).spacing(10).push(save_button).align_items(Alignment::Center)
-        } else {
-            row![Space::new(55, 55)].spacing(10).push(screenshot_button).align_items(Alignment::Center)
-        };
-        let mut bottom_container = Row::new()
-            .push(match self.save_state {
-                OnGoing => container(Spinner::new())
+            .into(),
+            BootstrapApp::Loaded(app) => {
+                let menu = top_menu(app);
+                let image: Element<Message> = if let Some(screenshot) = &app.screenshot
+                {
+                    image(image::Handle::from_pixels(
+                        screenshot.width(),
+                        screenshot.height(),
+                        screenshot.clone().into_raw(),
+                    ))
+                        .content_fit(ContentFit::Contain)
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .into()
+                } else {
+                    text("Press the button to take a screenshot!").into()
+                };
+                let mut image = row![image];
+                if app.resize {
+                    println!("Resize on");
+                    let handle = svg::Handle::from_path(format!(
+                        "{}/resources/{}.svg",
+                        env!("CARGO_MANIFEST_DIR"),
+                        "resize"
+                    ));
+        
+                    let svg = svg(handle)
+                        .height(Length::from(app.screenshot.clone().unwrap().height() as u16))
+                        .width(Length::from(app.screenshot.clone().unwrap().width() as u16));
+                    image = row![Modal::new(image, svg)];
+                }
+        
+                let image_container = container(
+                    image.padding(5)
+                ).center_x().center_y()
                     .width(Length::Fill)
+                    .height(Length::Fill)
                     .center_x()
-                    .center_y(),
-                SaveState::Done => container(text("Screenshot saved correctly!")),
-                _ => container(button_row)
-            });
-        if self.delay_time > 0. && self.save_state != OnGoing {
-            let delay_handle = svg::Handle::from_path(format!(
-                "{}/resources/{}.svg",
-                env!("CARGO_MANIFEST_DIR"),
-                "delay"
-            ));
-
-            let delay_svg = svg(delay_handle)
-                .height(30)
-                .width(30)
-                .content_fit(ContentFit::Contain);
-            bottom_container = bottom_container.spacing(10).push(container(delay_svg).height(55).width(55).padding(15).center_x().center_y());
-        } else {
-            bottom_container = bottom_container.spacing(10).push(Space::new(55, 55)).align_items(Alignment::Center);
+                    .center_y();
+        
+                let screenshot_button = image_button("screenshot", "Screenshot", Message::Screenshot);
+                let button_row = if app.screenshot.is_some() {
+                    let drag_button = image_button("drag", "Resize", Message::Resize);
+                    let delete_button = image_button("delete", "Delete", Message::Drop);
+                    let save_button = image_button("save", "Save", Message::MenuAction(Modals::Save));
+                    row![drag_button].spacing(10).push(delete_button).spacing(10).push(screenshot_button).spacing(10).push(save_button).align_items(Alignment::Center)
+                } else {
+                    row![Space::new(55, 55)].spacing(10).push(screenshot_button).align_items(Alignment::Center)
+                };
+                let mut bottom_container = Row::new()
+                    .push(match app.save_state {
+                        OnGoing => container(Spinner::new())
+                            .width(Length::Fill)
+                            .center_x()
+                            .center_y(),
+                        SaveState::Done => container(text("Screenshot saved correctly!")),
+                        _ => container(button_row)
+                    });
+                if app.delay_time > 0. && app.save_state != OnGoing {
+                    let delay_handle = svg::Handle::from_path(format!(
+                        "{}/resources/{}.svg",
+                        env!("CARGO_MANIFEST_DIR"),
+                        "delay"
+                    ));
+        
+                    let delay_svg = svg(delay_handle)
+                        .height(30)
+                        .width(30)
+                        .content_fit(ContentFit::Contain);
+                    bottom_container = bottom_container.spacing(10).push(container(delay_svg).height(55).width(55).padding(15).center_x().center_y());
+                } else {
+                    bottom_container = bottom_container.spacing(10).push(Space::new(55, 55)).align_items(Alignment::Center);
+                }
+        
+                let notification = if let Some(t) = &app.clipboard_success_message {
+                    text(t)
+                } else {
+                    text("")
+                };
+        
+                let body = column![
+                    image_container
+                        .center_x()
+                        .center_y(),
+                        container(notification).width(Length::Fill).center_x().center_y().padding([0,0,16,0]),
+                    container(
+                        bottom_container
+                    ).padding([0,0,8,0])
+                        .align_x(alignment::Horizontal::Center)
+                        .width(Length::FillPortion(1))
+                        .center_x()
+                ];
+        
+                let overlay = match app.modal {
+                    Modals::SetPath => setpath_modal(&app),
+                    Modals::Hotkeys => hotkeys_modal(&app),
+                    Modals::SaveAs => save_as_modal(&app),
+                    Modals::Settings => settings_modal(&app),
+                    _ => None
+                };
+        
+                let content = column![
+                    menu,
+                    container(body).width(Length::Fill)
+                    .height(Length::Fill)
+                    .padding(5)
+                    .center_x()
+        
+                ];
+                modal(container(content), overlay)
+                    .backdrop(Message::CloseModal)
+                    .on_esc(Message::CloseModal)
+                    .align_y(alignment::Vertical::Center)
+                    .into()
+            }
         }
-
-        let notification = if let Some(t) = &self.clipboard_success_message {
-            text(t)
-        } else {
-            text("")
-        };
-
-        let body = column![
-            image_container
-                .center_x()
-                .center_y(),
-                container(notification).width(Length::Fill).center_x().center_y().padding([0,0,16,0]),
-            container(
-                bottom_container
-            ).padding([0,0,8,0])
-                .align_x(alignment::Horizontal::Center)
-                .width(Length::FillPortion(1))
-                .center_x()
-        ];
-
-        let overlay = match self.modal {
-            Modals::SetPath => setpath_modal(&self),
-            Modals::Hotkeys => hotkeys_modal(&self),
-            Modals::SaveAs => save_as_modal(&self),
-            Modals::Settings => settings_modal(&self),
-            _ => None
-        };
-
-        let content = column![
-            menu,
-            container(body).width(Length::Fill)
-            .height(Length::Fill)
-            .padding(5)
-            .center_x()
-
-        ];
-        modal(container(content), overlay)
-            .backdrop(Message::CloseModal)
-            .on_esc(Message::CloseModal)
-            .align_y(alignment::Vertical::Center)
-            .into()
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
