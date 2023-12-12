@@ -10,11 +10,18 @@ pub mod utils {
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
-    use image::{ColorType, DynamicImage, EncodableLayout, ImageFormat, RgbaImage};
+<<<<<<< HEAD
+    use image::{ColorType, DynamicImage, ImageFormat, RgbaImage};
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
     use gif::{Frame,Encoder};
+
+=======
+    use image::{ColorType, EncodableLayout, RgbaImage};
+    use screenshots::Screen;
+    use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
     use arboard::{Clipboard, ImageData, Error};
+>>>>>>> main
 
     pub fn screenshot(target: &mut App) {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -180,7 +187,11 @@ pub fn copy_to_clipboard(image: &Option<RgbaImage>) -> Result<(), Box<dyn std::e
             Ok(Response::Cancel) => {
                 None
             },
+<<<<<<< HEAD
+            Err(_error) => {
+=======
             Err(_) => {
+>>>>>>> main
                 panic!("Error selection folder");
             }
         }
