@@ -66,13 +66,13 @@ pub mod utils {
     }
 
     pub async fn save_to_gif(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
-        let frame = gif::Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.into_raw(),30);
+        let frame = Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.into_raw(),30);
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
         let path_image = format!("{}/SCRN_{}.gif", path, string_time);
         let mut file_out = File::create(path_image.clone()).unwrap();
         tokio::task::spawn_blocking(move || {
-            let mut encoder = gif::Encoder::new(&mut file_out, frame.width, frame.height, &[]).unwrap();
+            let mut encoder = Encoder::new(&mut file_out, frame.width, frame.height, &[]).unwrap();
         encoder.write_frame(&frame)
             .map(|_| path_image)
             .map_err(|err| ExportError(format!("{err:?}")))
