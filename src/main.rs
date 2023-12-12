@@ -9,6 +9,6 @@ mod hotkeys;
 mod modals;
 
 pub fn main() -> iced::Result {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt::init(); // TODO: remove in production
     app::BootstrapApp::run(iced::Settings::default())
 }
