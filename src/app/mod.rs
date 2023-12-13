@@ -54,7 +54,8 @@ pub struct App {
     modal: Modals,
     //Multimonitor
     screens: Vec<String>,
-    display_selected: usize
+    display_selected: usize,
+    manual_display_selection: Option<usize>
 }
 
 impl App {
@@ -95,6 +96,7 @@ impl App {
                         clipboard_success_message: None,
                         display_selected: 0,
                         screens: (1..=num_of_screens()).map(|u| u.to_string()).collect(),
+                        manual_display_selection: Some(0)
                     }
     }
 
@@ -359,7 +361,7 @@ impl Application for BootstrapApp {
                         Command::none()
                     },
                     Message::None => {app.clipboard_success_message = None; Command::none()},
-                    Message::MonitorSelected(index, _) => {app.display_selected = index; println!("{}", index); Command::none()},
+                    Message::MonitorSelected(index, _) => {app.display_selected = index; app.manual_display_selection=None; println!("{}", index); Command::none()},
                     Message::TempEvent(e) => { println!("{:?}", e); Command::none() },
                     _ => Command::none()
                 };
@@ -386,14 +388,19 @@ impl Application for BootstrapApp {
                 let selection_list: SelectionList<_, Message> = SelectionList::new_with(
                     &app.screens,
                     Message::MonitorSelected,
-                    16.0,
+                    14.0,
                     5.0,
                     SelectionListStyles::Default,
-                    app.manual_select(),
+                    app.manual_display_selection,
                     Font::default(),
-                )
-                    .width(Length::Shrink)
-                    .height(Length::Shrink);
+                ).width(Length::Shrink).height(Length::Shrink);
+            
+                let sel_column = container(
+                    column![
+                    text("Monitor"),
+                    container(selection_list).width(60).height(55).center_x()
+                ]
+                );
                 let image: Element<Message> = if let Some(screenshot) = &app.screenshot
                 {
                     image(image::Handle::from_pixels(
@@ -436,10 +443,20 @@ impl Application for BootstrapApp {
                     let drag_button = image_button("drag", "Resize", Message::Resize);
                     let delete_button = image_button("delete", "Delete", Message::Drop);
                     let save_button = image_button("save", "Save", Message::MenuAction(Modals::Save));
-                    row![drag_button].spacing(10).push(delete_button).spacing(10).push(screenshot_button).push(selection_list).spacing(10).push(save_button).align_items(Alignment::Center)
+                    if app.screens.len() == 1 {
+                        row![drag_button].spacing(10).push(delete_button).spacing(10).push(screenshot_button).spacing(10).push(save_button).align_items(Alignment::Center)
+                    } else {
+                        row![Space::new(30, 55)].spacing(10).push(drag_button).spacing(10).push(delete_button).spacing(10).push(screenshot_button).spacing(10).push(sel_column).spacing(10).push(save_button).align_items(Alignment::Center)
+                    }
                 } else {
-                    row![Space::new(55, 55)].spacing(10).push(screenshot_button).align_items(Alignment::Center)
+                    if app.screens.len() == 1 {
+                        row![Space::new(55, 55)].spacing(10).push(screenshot_button).align_items(Alignment::Center)
+                    } else {
+                        row![Space::new(55, 55)].spacing(10).push(Space::new(30, 55)).spacing(10)
+                        .push(screenshot_button).spacing(10).push(sel_column).align_items(Alignment::Center)   
+                    }
                 };
+
                 let mut bottom_container = Row::new()
                     .push(match app.save_state {
                         OnGoing => container(Spinner::new())
