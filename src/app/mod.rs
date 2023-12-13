@@ -24,7 +24,6 @@ use iced::keyboard::{self};
 use crate::modals::settings_modal::settings_modal;
 
 use iced::event::Event;
-use crate::app::Message::TempEvent;
 use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
 use crate::utils::select_path;
@@ -178,7 +177,6 @@ pub enum Message {
     None,
     Loaded(Result<(), String>),
     FontLoaded(Result<(), font::Error>),
-    TempEvent(Event)
 }
 
 #[derive(Debug)]
@@ -256,7 +254,10 @@ impl Application for BootstrapApp {
                         Command::batch(vec![change_mode, wait])
                     },
                     Message::WindowHidden => {
-                        screenshot(app);
+                        match screenshot(app) {
+                            Err(_) => {app.screens = (1..=num_of_screens()).map(|u| u.to_string()).collect(); app.display_selected = 0; app.manual_display_selection = Some(0)},
+                            Ok(_) => ()
+                        };
                         window::change_mode(Mode::Windowed)
                     },
                     Message::Drop => {
@@ -362,7 +363,6 @@ impl Application for BootstrapApp {
                     },
                     Message::None => {app.clipboard_success_message = None; Command::none()},
                     Message::MonitorSelected(index, _) => {app.display_selected = index; app.manual_display_selection=None; println!("{}", index); Command::none()},
-                    Message::TempEvent(e) => { println!("{:?}", e); Command::none() },
                     _ => Command::none()
                 };
             }
@@ -532,7 +532,7 @@ impl Application for BootstrapApp {
                 keyboard::Event::CharacterReceived(c) => Some(Message::KeyboardComb(c)),
                 _ => None,
             },
-            _ => Some(TempEvent(event)),
+            _ => None,
         })
     }
 
