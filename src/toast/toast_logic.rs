@@ -1,4 +1,3 @@
-mod toast {
     use std::fmt;
     use std::time::{Duration, Instant};
 
@@ -504,4 +503,4 @@ mod toast {
             Element::new(manager)
         }
     }
-}
+

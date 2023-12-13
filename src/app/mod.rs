@@ -28,6 +28,8 @@ use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
 use crate::utils::select_path;
 
+use crate::toast::toast_logic::{Toast,Status};
+
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -50,7 +52,8 @@ pub struct App {
     hotkeys_error_message: Option<String>,
     clipboard_success_message: Option<String>,
     // Modal to be shown
-    modal: Modals
+    modal: Modals,
+    //toasts: Vec<Toast>,
 }
 
 impl App {
