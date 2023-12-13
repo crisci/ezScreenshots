@@ -1,4 +1,5 @@
 use iced::Application;
+use iced::window::Position;
 
 mod app;
 mod custom_widgets;
@@ -10,5 +11,14 @@ mod modals;
 
 pub fn main() -> iced::Result {
     tracing_subscriber::fmt::init(); // TODO: remove in production
-    app::BootstrapApp::run(iced::Settings::default())
+    let settings: iced::Settings<()> = iced::Settings {
+        window: iced::window::Settings {
+            icon: iced::window::icon::from_file(format!("{}/resources/icon.png", env!("CARGO_MANIFEST_DIR"))).ok(),
+            position: Position::Centered,
+            ..iced::window::Settings::default()
+        },
+        id: Some("ezScreenshots".to_string()),
+        ..Default::default()
+    };
+    app::BootstrapApp::run(settings)
 }

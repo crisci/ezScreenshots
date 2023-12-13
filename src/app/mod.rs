@@ -24,6 +24,7 @@ use iced::keyboard::{self};
 use crate::modals::settings_modal::settings_modal;
 
 use iced::event::Event;
+use crate::app::Message::TempEvent;
 use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
 use crate::utils::select_path;
@@ -175,6 +176,7 @@ pub enum Message {
     None,
     Loaded(Result<(), String>),
     FontLoaded(Result<(), font::Error>),
+    TempEvent(Event)
 }
 
 #[derive(Debug)]
@@ -205,7 +207,7 @@ impl Application for BootstrapApp {
     }
 
     fn title(&self) -> String {
-        String::from("📷 Screenshots")
+        String::from("ezScreenshots")
     }
     
 
@@ -357,7 +359,8 @@ impl Application for BootstrapApp {
                         Command::none()
                     },
                     Message::None => {app.clipboard_success_message = None; Command::none()},
-                    Message::MonitorSelected(index, _) => {app.display_selected = index; println!("{}", index); Command::none()}
+                    Message::MonitorSelected(index, _) => {app.display_selected = index; println!("{}", index); Command::none()},
+                    Message::TempEvent(e) => { println!("{:?}", e); Command::none() },
                     _ => Command::none()
                 };
             }
@@ -512,7 +515,7 @@ impl Application for BootstrapApp {
                 keyboard::Event::CharacterReceived(c) => Some(Message::KeyboardComb(c)),
                 _ => None,
             },
-            _ => None,
+            _ => Some(TempEvent(event)),
         })
     }
 
