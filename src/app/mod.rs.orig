@@ -52,11 +52,14 @@ pub struct App {
     hotkeys_error_message: Option<String>,
     // Modal to be shown
     modal: Modals,
-    toasts: Vec<Toast>,
+<<<<<<< HEAD
     //Multimonitor
     screens: Vec<String>,
     display_selected: usize,
     manual_display_selection: Option<usize>
+=======
+    toasts: Vec<Toast>,
+>>>>>>> main
 }
 
 impl App {
@@ -94,10 +97,14 @@ impl App {
                         modal: Modals::None,
                         hotkeys_error_message: None,
                         temp_hotkeys: hotkeys_saved.clone(),
-                        toasts: vec![],
+<<<<<<< HEAD
+                        clipboard_success_message: None,
                         display_selected: 0,
                         screens: (1..=num_of_screens()).map(|u| u.to_string()).collect(),
                         manual_display_selection: Some(0)
+=======
+                        toasts: vec![]
+>>>>>>> main
                     }
     }
 
@@ -179,7 +186,11 @@ pub enum Message {
     Quit,
     PathSelected,
     SetDefaultPath,
+<<<<<<< HEAD
     MonitorSelected(usize, String),
+    None,
+=======
+>>>>>>> main
     Loaded(Result<(), String>),
     FontLoaded(Result<(), font::Error>),
     AddToast(String,String,Status),
@@ -367,7 +378,10 @@ impl Application for BootstrapApp {
                         app.modal = Modals::None;
                         Command::none()
                     },
+<<<<<<< HEAD
+                    Message::None => {app.clipboard_success_message = None; Command::none()},
                     Message::MonitorSelected(index, _) => {app.display_selected = index; app.manual_display_selection=None; println!("{}", index); Command::none()},
+=======
                     Message::AddToast(title,body,level) => {
                         let toast = Toast{
                             title: title,
@@ -376,6 +390,7 @@ impl Application for BootstrapApp {
                         };
                         app.toasts.push(toast); Command::none()},
                     Message::CloseToast(index) => {app.toasts.remove(index); Command::none()},
+>>>>>>> main
                     _ => Command::none()
                 };
             }
@@ -493,6 +508,8 @@ impl Application for BootstrapApp {
                 } else {
                     bottom_container = bottom_container.spacing(10).push(Space::new(55, 55)).align_items(Alignment::Center);
                 }
+        
+
         
                 let body = column![
                     image_container

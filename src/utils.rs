@@ -7,6 +7,7 @@ pub mod utils {
     use std::{thread, path::PathBuf};
     use std::borrow::Cow;
     use std::time::Duration;
+    use anyhow;
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
@@ -16,11 +17,13 @@ pub mod utils {
     use gif::{Frame,Encoder};
     use arboard::{Clipboard, ImageData, Error};
 
-    pub fn screenshot(target: &mut App) {
+    pub fn screenshot(target: &mut App) -> Result<(), anyhow::Error> {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
-        let screens = Screen::all().unwrap();
-        let image = screens[0].capture().unwrap();
+        let screens = Screen::all().expect("Monitor not recognized");
+        if target.display_selected() > screens.len() - 1 { return Err(anyhow::Error::msg("Out of range screens"))};
+        let image = screens[target.display_selected()].capture()?;
         target.set_screenshot(Some(image));
+        Ok(())
     }
 
     #[derive(Clone, Debug)]
@@ -163,7 +166,13 @@ pub fn copy_to_clipboard(image: &Option<RgbaImage>) -> Result<(), Box<dyn std::e
             _ => Err(Box::new(Error::ContentNotAvailable))
         };
     }
-}
+
+    pub fn num_of_screens() -> usize {
+        let screen = Screen::all().unwrap();
+        screen.len()
+    }
+
+ }
     pub fn select_path() -> Option<String>{
         let result = open_pick_folder(None);
         match result {
