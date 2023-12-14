@@ -374,7 +374,7 @@ impl Application for BootstrapApp {
                             body: body,
                             status: level
                         };
-                        app.toasts.push(toast); Command::none()},
+                        if !app.toasts.contains(&toast) {app.toasts.push(toast)} Command::none()},
                     Message::CloseToast(index) => {app.toasts.remove(index); Command::none()},
                     _ => Command::none()
                 };

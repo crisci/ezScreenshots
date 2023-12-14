@@ -68,7 +68,7 @@
         }
     }
 
-    #[derive(Debug, Clone, Default)]
+    #[derive(Debug, Clone, Default,PartialEq)]
     pub struct Toast {
         pub title: String,
         pub body: String,
