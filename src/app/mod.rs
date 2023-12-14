@@ -243,10 +243,15 @@ impl Application for BootstrapApp {
                             return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Error".into(), "Screenshot not available".into(), Status::Danger))};
                         match action {
                             Modals::Save => {
-                                let path = app.save_path.clone();
-                                let screenshot = app.screenshot.clone().unwrap();
-                                app.save_state = OnGoing;
-                                Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
+                                return match app.save_state {
+                                    Nothing => {
+                                        let path = app.save_path.clone();
+                                        let screenshot = app.screenshot.clone().unwrap();
+                                        app.save_state = OnGoing;
+                                        Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
+                                    },
+                                    _ => Command::none()
+                                };
                             },
                             Modals::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
                             Modals::Settings => {
