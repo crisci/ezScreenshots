@@ -171,6 +171,7 @@ pub fn copy_to_clipboard(image: &Option<RgbaImage>) -> Result<(), Box<dyn std::e
         let screen = Screen::all().unwrap();
         screen.len()
     }
+
  }
     pub fn select_path() -> Option<String>{
         let result = open_pick_folder(None);

@@ -137,6 +137,10 @@ impl App {
         self.hotkeys_error_message.clone()
     }
 
+    pub(crate) fn refresh_screens(&mut self) {
+        self.screens = (1..=num_of_screens()).map(|u| u.to_string()).collect();
+    }
+
 }
 
 
@@ -219,6 +223,7 @@ impl Application for BootstrapApp {
                 }
             }
             BootstrapApp::Loaded(app) => {
+                app.refresh_screens();
                 return match message {
                     Message::Init => {
                         app.save_path = app.default_path.clone();
