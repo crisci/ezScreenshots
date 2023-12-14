@@ -15,7 +15,7 @@ pub struct Hotkeys {
     delete: char,
     exit: char,
     copy: char,
-    settings: char,
+    delay: char,
     resize: char,
     screenshot: char,
     // TODO: delay screenshot ??
@@ -29,7 +29,7 @@ pub enum HotkeysMap {
     Delete = 2,
     Exit = 3,
     Copy = 4,
-    Settings = 5,
+    Delay = 5,
     Resize = 6,
     Screenshot = 7,
     None = 255
@@ -43,7 +43,7 @@ impl Hotkeys {
             delete: '\u{4}', //CTRL+D
             exit: '\u{5}', //CTRL+E
             copy: '\u{3}', //CTRL+C
-            settings: '\u{10}', //CTRL+P
+            delay: '\u{10}', //CTRL+P
             resize: '\u{12}', //CTRL+R
             screenshot: ' ' //SPACE
         }
@@ -73,8 +73,8 @@ impl Hotkeys {
         self.copy
     }
 
-    pub fn get_settings(&self) -> char {
-        self.settings
+    pub fn get_delay(&self) -> char {
+        self.delay
     }
 
     pub fn get_resize(&self) -> char {
@@ -106,8 +106,8 @@ impl Hotkeys {
         self.copy = copy;
     }
 
-    pub fn set_settings(&mut self, settings: char) {
-        self.settings = settings;
+    pub fn set_delay(&mut self, delay: char) {
+        self.delay = delay;
     }
 
     pub fn set_resize(&mut self, resize: char) {
@@ -125,7 +125,7 @@ impl Hotkeys {
             _ if self.delete == c => Some(Message::Drop),
             _ if self.exit == c => Some(Message::Quit), //TODO: implement close application
             _ if self.copy == c => Some(Message::CopyToClipboard), //TODO: copy to clipboard
-            _ if self.settings == c => Some(Message::MenuAction(Modals::Settings)),
+            _ if self.delay == c => Some(Message::MenuAction(Modals::DelayTime)),
             _ if self.resize == c => Some(Message::Resize),
             _ if self.screenshot == c => Some(Message::Screenshot),
             _ => None,
@@ -136,7 +136,7 @@ impl Hotkeys {
     pub fn char_already_used(&self, c: char) -> bool {
         if 
         self.save == c || self.saveas == c || self.copy == c || 
-        self.delete == c || self.exit == c || self.settings == c || 
+        self.delete == c || self.exit == c || self.delay == c ||
         self.resize == c || self.screenshot == c {
             return true;
         }
@@ -150,7 +150,7 @@ impl Hotkeys {
             HotkeysMap::Delete => self.set_delete(new_char),
             HotkeysMap::Exit => self.set_exit(new_char),
             HotkeysMap::Copy => self.set_copy(new_char),
-            HotkeysMap::Settings => self.set_settings(new_char),
+            HotkeysMap::Delay => self.set_delay(new_char),
             HotkeysMap::Resize => self.set_resize(new_char),
             HotkeysMap::Screenshot => self.set_screenshot(new_char),
             HotkeysMap::None => (),
@@ -215,7 +215,7 @@ impl fmt::Display for HotkeysMap {
             HotkeysMap::Delete => write!(f, "Delete"),
             HotkeysMap::Exit => write!(f, "Exit"),
             HotkeysMap::Copy => write!(f, "Copy"),
-            HotkeysMap::Settings => write!(f, "Settings"),
+            HotkeysMap::Delay => write!(f, "Delay"),
             HotkeysMap::Resize => write!(f, "Resize"),
             HotkeysMap::Screenshot => write!(f, "Screenshot"),
             HotkeysMap::None => write!(f, "None"),
