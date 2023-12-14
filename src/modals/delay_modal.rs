@@ -4,19 +4,19 @@ use iced_aw::{Card, number_input, NumberInputStyles};
 use crate::app::{App, Message};
 use crate::custom_widgets::rounded_button;
 
-pub fn settings_modal(app: &App) -> Option<Card<Message>> {
+pub fn delay_modal(app: &App) -> Option<Card<Message>> {
     let txt_seconds = number_input(app.temp(), 100., Message::DelayChanged)
         .style(NumberInputStyles::Default)
         .step(1.);
     return
         Some(
             Card::new(
-                Text::new("Settings"),
+                Text::new("Delay"),
                 Row::new()
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
                     .spacing(10)
-                    .push(Text::new("Delay:"))
+                    .push(Text::new("Set Delay Time(s):"))
                     .push(txt_seconds)
             )
                 .foot(
@@ -28,7 +28,7 @@ pub fn settings_modal(app: &App) -> Option<Card<Message>> {
                             rounded_button("Cancel", Message::CloseModal)
                         )
                         .push(
-                            rounded_button("Save", Message::SettingSave)
+                            rounded_button("Save", Message::DelaySave)
                         ),
 
                 )

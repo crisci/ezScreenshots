@@ -21,7 +21,7 @@ use crate::utils::utils::*;
 use crate::modals::setdefaultpath_modal::setpath_modal;
 
 use iced::keyboard::{self};
-use crate::modals::settings_modal::settings_modal;
+use crate::modals::delay_modal::delay_modal;
 
 use iced::event::Event;
 use crate::modals::hotkeys_modal::hotkeys_modal;
@@ -164,13 +164,13 @@ pub enum Message {
     ScreenshotSaved(Result<String, ExportError>),
     CloseModal,
     OpenSaveAsModal,
-    OpenSettingsModal,
+    OpenDelayModal,
     OpenSetPathModal,
     SaveAsButtonPressed,
     FormatSelected(usize, String),
     Init,
     DelayChanged(f32),
-    SettingSave,
+    DelaySave,
     HotkeysSave,
     KeyboardComb(char),
     OpenHotkeysModal,
@@ -239,7 +239,7 @@ impl Application for BootstrapApp {
                         Command::none()
                     },
                     Message::MenuAction(action) => {
-                        if app.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys && action != Modals::SetPath{
+                        if app.screenshot.is_none() && action != Modals::DelayTime && action != Modals::Hotkeys && action != Modals::SetPath{
                             return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Error".into(), "Screenshot not available".into(), Status::Danger))};
                         match action {
                             Modals::Save => {
@@ -249,9 +249,9 @@ impl Application for BootstrapApp {
                                 Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
                             },
                             Modals::SaveAs => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSaveAsModal ),
-                            Modals::Settings => {
+                            Modals::DelayTime => {
                                 app.temp = app.delay_time;
-                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenSettingsModal) },
+                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::OpenDelayModal) },
                             Modals::Hotkeys => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenHotkeysModal ),
                             Modals::SetPath => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_|Message::OpenSetPathModal ),
                             _ => Command::none()
@@ -285,7 +285,7 @@ impl Application for BootstrapApp {
                         Command::batch(commands)
                     },
                     Message::OpenSaveAsModal => { app.modal = Modals::SaveAs; Command::none() },
-                    Message::OpenSettingsModal => { app.modal = Modals::Settings; Command::none() },
+                    Message::OpenDelayModal => { app.modal = Modals::DelayTime; Command::none() },
                     Message::OpenHotkeysModal => { app.modal = Modals::Hotkeys; Command::none()}
                     Message::CloseModal => {
                         if app.modal == Modals::SaveAs || app.modal == Modals::SetPath {app.save_path = app.default_path.clone()}
@@ -310,7 +310,7 @@ impl Application for BootstrapApp {
                     },
                     Message::FormatSelected(_, format) => {app.export_format = Formats::from(format); app.manual_select = None; Command::none()},
                     Message::DelayChanged(value) => {app.temp = value; Command::none()}
-                    Message::SettingSave => { app.delay_time = app.temp; app.modal = Modals::None; Command::none() },
+                    Message::DelaySave => { app.delay_time = app.temp; app.modal = Modals::None; Command::none() },
                     Message::KeyboardComb(event)  => {
                         return if app.hotkeys_modification == HotkeysMap::None {
                             if app.modal == Modals::None {
@@ -510,7 +510,7 @@ impl Application for BootstrapApp {
                     Modals::SetPath => setpath_modal(&app),
                     Modals::Hotkeys => hotkeys_modal(&app),
                     Modals::SaveAs => save_as_modal(&app),
-                    Modals::Settings => settings_modal(&app),
+                    Modals::DelayTime => delay_modal(&app),
                     _ => None
                 };
         

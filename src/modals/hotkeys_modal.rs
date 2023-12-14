@@ -19,7 +19,7 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
                     .push(Row::new().push(Text::new("Delete")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_delete()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delete))))
                     .push(Row::new().push(Text::new("Exit")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_exit()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Exit))))
                     .push(Row::new().push(Text::new("Copy")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_copy()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Copy))))
-                    .push(Row::new().push(Text::new("Settings")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_settings()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Settings))))
+                    .push(Row::new().push(Text::new("Delay")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_delay()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delay))))
                     .push(Row::new().push(Text::new("Resize")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_resize()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Resize))))
                     .push(Row::new().push(Text::new("Screenshot")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_screenshot()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Screenshot)))) 
                     .push( if app.get_hotkey_modification() != HotkeysMap::None {
