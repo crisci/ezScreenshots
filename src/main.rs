@@ -8,6 +8,7 @@ mod menu;
 mod utils;
 mod hotkeys;
 mod modals;
+mod toast;
 
 pub fn main() -> iced::Result {
     tracing_subscriber::fmt::init(); // TODO: remove in production
