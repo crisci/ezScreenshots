@@ -11,7 +11,6 @@ mod modals;
 mod toast;
 
 pub fn main() -> iced::Result {
-    tracing_subscriber::fmt::init(); // TODO: remove in production
     let settings: iced::Settings<()> = iced::Settings {
         window: iced::window::Settings {
             icon: iced::window::icon::from_file(format!("{}/resources/icon.png", env!("CARGO_MANIFEST_DIR"))).ok(),
