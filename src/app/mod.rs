@@ -28,7 +28,7 @@ use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
 use crate::utils::select_path;
 
-use crate::toast::toast_logic::{Toast,Status};
+use crate::toast::toast_logic::{Toast, Status, Manager, DEFAULT_TIMEOUT};
 
 
 #[derive(Debug, Default)]
@@ -50,10 +50,9 @@ pub struct App {
     temp_hotkeys: Hotkeys,
     hotkeys_modification: HotkeysMap,
     hotkeys_error_message: Option<String>,
-    clipboard_success_message: Option<String>,
     // Modal to be shown
     modal: Modals,
-    //toasts: Vec<Toast>,
+    toasts: Vec<Toast>,
 }
 
 impl App {
@@ -91,7 +90,7 @@ impl App {
                         modal: Modals::None,
                         hotkeys_error_message: None,
                         temp_hotkeys: hotkeys_saved.clone(),
-                        clipboard_success_message: None,
+                        toasts: vec![]
                     }
     }
 
@@ -168,9 +167,10 @@ pub enum Message {
     Quit,
     PathSelected,
     SetDefaultPath,
-    None,
     Loaded(Result<(), String>),
     FontLoaded(Result<(), font::Error>),
+    AddToast(String,String,Status),
+    CloseToast(usize)
 }
 
 #[derive(Debug)]
@@ -225,7 +225,8 @@ impl Application for BootstrapApp {
                         Command::none()
                     },
                     Message::MenuAction(action) => {
-                        if app.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys && action != Modals::SetPath{println!("Screenshot not available"); return Command::none()};
+                        if app.screenshot.is_none() && action != Modals::Settings && action != Modals::Hotkeys && action != Modals::SetPath{
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Error".into(), "Screenshot not available".into(), Status::Danger))};
                         match action {
                             Modals::Save => {
                                 let path = app.save_path.clone();
@@ -261,8 +262,10 @@ impl Application for BootstrapApp {
                     },
                     Message::ScreenshotSaved(res) => {
                         if res.is_err() {panic!("{:?}", res.err())}
-                        app.save_state = SaveState::Done;
-                        Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init)
+                        let success = Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Success".into(), "Screenshot saved correctly!".into(), Status::Success));
+                        let init = Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init);
+                        let commands = vec![success,init];
+                        Command::batch(commands)
                     },
                     Message::OpenSaveAsModal => { app.modal = Modals::SaveAs; Command::none() },
                     Message::OpenSettingsModal => { app.modal = Modals::Settings; Command::none() },
@@ -277,7 +280,8 @@ impl Application for BootstrapApp {
                     },
                 Message::OpenSetPathModal => { app.modal = Modals::SetPath; Command::none()},
                     Message::SaveAsButtonPressed => {
-                        if app.screenshot.is_none() {println!("Screenshot not available"); return Command::none()};
+                        if app.screenshot.is_none() {
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Error".into(), "Screenshot not available".into(), Status::Danger))};
                         let screenshot = app.screenshot.clone().unwrap();
                         let path = app.save_path.clone();
                         app.save_state = SaveState::OnGoing;
@@ -322,13 +326,7 @@ impl Application for BootstrapApp {
                     Message::CopyToClipboard => {
                         return match copy_to_clipboard(&app.screenshot) {
                             Ok(_) => {
-                                return match app.clipboard_success_message {
-                                    None => {
-                                        app.clipboard_success_message = Some("Screenshot copied to clipboard!".to_string());
-                                        Command::perform(tokio::time::sleep(std::time::Duration::from_millis(2000)), |_| {Message::None})
-                                    },
-                                    _ => Command::none()
-                                };
+                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Success".into(), "Screenshot copied to clipboard!".into(), Status::Success))
                             },/*set copy message*/
                             _ => Command::none()
                         };
@@ -352,7 +350,14 @@ impl Application for BootstrapApp {
                         app.modal = Modals::None;
                         Command::none()
                     },
-                    Message::None => {app.clipboard_success_message = None; Command::none()},
+                    Message::AddToast(title,body,level) => {
+                        let toast = Toast{
+                            title: title,
+                            body: body,
+                            status: level
+                        };
+                        app.toasts.push(toast); Command::none()},
+                    Message::CloseToast(index) => {app.toasts.remove(index); Command::none()},
                     _ => Command::none()
                 };
             }
@@ -427,7 +432,6 @@ impl Application for BootstrapApp {
                             .width(Length::Fill)
                             .center_x()
                             .center_y(),
-                        SaveState::Done => container(text("Screenshot saved correctly!")),
                         _ => container(button_row)
                     });
                 if app.delay_time > 0. && app.save_state != OnGoing {
@@ -446,17 +450,12 @@ impl Application for BootstrapApp {
                     bottom_container = bottom_container.spacing(10).push(Space::new(55, 55)).align_items(Alignment::Center);
                 }
         
-                let notification = if let Some(t) = &app.clipboard_success_message {
-                    text(t)
-                } else {
-                    text("")
-                };
+
         
                 let body = column![
                     image_container
                         .center_x()
                         .center_y(),
-                        container(notification).width(Length::Fill).center_x().center_y().padding([0,0,16,0]),
                     container(
                         bottom_container
                     ).padding([0,0,8,0])
@@ -481,10 +480,13 @@ impl Application for BootstrapApp {
                     .center_x()
         
                 ];
-                modal(container(content), overlay)
+                let content2 = column![modal(container(content), overlay)
                     .backdrop(Message::CloseModal)
                     .on_esc(Message::CloseModal)
                     .align_y(alignment::Vertical::Center)
+                    ];
+                Manager::new(content2, &app.toasts, Message::CloseToast)
+                    .timeout(DEFAULT_TIMEOUT)
                     .into()
             }
         }
