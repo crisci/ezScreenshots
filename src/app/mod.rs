@@ -236,6 +236,7 @@ impl Application for BootstrapApp {
                         app.save_state = Nothing;
                         app.temp = app.delay_time;
                         app.temp_hotkeys = app.hotkeys.clone();
+                        app.manual_display_selection = Some(app.display_selected);
                         Command::none()
                     },
                     Message::MenuAction(action) => {
@@ -268,11 +269,13 @@ impl Application for BootstrapApp {
                         Command::batch(vec![change_mode, wait])
                     },
                     Message::WindowHidden => {
-                        match screenshot(app) {
-                            Err(_) => {app.screens = (1..=num_of_screens()).map(|u| u.to_string()).collect(); app.display_selected = 0; app.manual_display_selection = Some(0)},
-                            Ok(_) => ()
+                        let command = match screenshot(app) {
+                            Err(_) => {app.screens = (1..=num_of_screens()).map(|u| u.to_string()).collect(); app.display_selected = 0; app.manual_display_selection = Some(0);
+                                Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Error".into(), "The selected display could be unpluged".into(), Status::Danger))},
+                            Ok(_) => {app.manual_display_selection = Some(app.display_selected); Command::none()}
                         };
-                        window::change_mode(Mode::Windowed)
+                        let change_mode = window::change_mode(Mode::Windowed);
+                        Command::batch(vec![command, change_mode])
                     },
                     Message::Drop => {
                         app.screenshot = None;
@@ -372,7 +375,7 @@ impl Application for BootstrapApp {
                         app.modal = Modals::None;
                         Command::none()
                     },
-                    Message::MonitorSelected(index, _) => {app.display_selected = index; app.manual_display_selection=None; println!("{}", index); Command::none()},
+                    Message::MonitorSelected(index, _) => {app.display_selected = index; app.manual_display_selection=None; Command::none()},
                     Message::AddToast(title,body,level) => {
                         let toast = Toast{
                             title: title,
