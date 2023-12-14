@@ -37,7 +37,7 @@ fn return_action(label: &str) -> Modals {
     match label.into() {
         "Save" => Modals::Save,
         "Save as..." => Modals::SaveAs,
-        "Set Delay Time" => Modals::DelayTime,
+        "Delay" => Modals::DelayTime,
         "Hotkeys" => Modals::Hotkeys,
         "Default Path" => Modals::SetPath,
         _ => panic!("Not recognized action")
@@ -94,7 +94,7 @@ fn menu_settings<'a>(_app: &App) -> MenuTree<'a, Message, iced::Renderer> {
         vec![
             debug_item("Hotkeys"),
             debug_item("Default Path"),
-            debug_item("Set Delay Time")
+            debug_item("Delay")
         ],
     ).width(110);
 

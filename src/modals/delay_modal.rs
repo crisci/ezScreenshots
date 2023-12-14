@@ -11,12 +11,12 @@ pub fn delay_modal(app: &App) -> Option<Card<Message>> {
     return
         Some(
             Card::new(
-                Text::new("Set Delay Time"),
+                Text::new("Delay"),
                 Row::new()
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
                     .spacing(10)
-                    .push(Text::new("Delay:"))
+                    .push(Text::new("Set Delay Time(s):"))
                     .push(txt_seconds)
             )
                 .foot(
