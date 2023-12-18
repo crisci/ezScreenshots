@@ -50,6 +50,7 @@ pub struct App {
     temp_hotkeys: Hotkeys,
     hotkeys_modification: HotkeysMap,
     hotkeys_error_message: Option<String>,
+    copy_status: CopyState,
     // Modal to be shown
     modal: Modals,
     toasts: Vec<Toast>,
@@ -97,7 +98,8 @@ impl App {
                         toasts: vec![],
                         display_selected: 0,
                         screens: (1..=num_of_screens()).map(|u| u.to_string()).collect(),
-                        manual_display_selection: Some(0)
+                        manual_display_selection: Some(0),
+                        copy_status: Default::default(),
                     }
     }
 
@@ -154,6 +156,13 @@ pub enum SaveState {
     Done
 }
 
+#[derive(Default, Debug, Clone, PartialEq)]
+pub enum CopyState {
+    #[default]
+    Nothing,
+    OnGoing
+}
+
 #[derive(Debug, Clone)]
 pub enum Message {
     Screenshot,
@@ -175,6 +184,7 @@ pub enum Message {
     KeyboardComb(char),
     OpenHotkeysModal,
     CopyToClipboard,
+    CopySuccess(Result<(), CopyError>),
     ChangeHotkey(HotkeysMap),
     Quit,
     PathSelected,
@@ -349,13 +359,19 @@ impl Application for BootstrapApp {
                         Command::none()
                     },
                     Message::CopyToClipboard => {
-                        return match copy_to_clipboard(&app.screenshot) {
+                        if app.copy_status == CopyState::OnGoing {return Command::none()};
+                        app.copy_status = CopyState::OnGoing;
+                        Command::perform(copy_to_clipboard(app.screenshot.clone()), Message::CopySuccess)
+                    },
+                    Message::CopySuccess(res) => {
+                        app.copy_status = CopyState::Nothing;
+                        return match res {
                             Ok(_) => {
                                 Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Success".into(), "Screenshot copied to clipboard!".into(), Status::Success))
                             },/*set copy message*/
-                            _ => Command::none()
+                            _ => Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)),|_| Message::AddToast("Error".into(), "Error while copying to clipboard".into(), Status::Danger))
                         };
-                    }
+                    },
                     Message::HotkeysSave => {
                         app.hotkeys = app.temp_hotkeys.clone();
                         app.temp_hotkeys = app.hotkeys.clone();

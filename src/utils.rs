@@ -15,7 +15,7 @@ pub mod utils {
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
     use gif::{Frame,Encoder};
-    use arboard::{Clipboard, ImageData, Error};
+    use arboard::{Clipboard, ImageData};
 
     pub fn screenshot(target: &mut App) -> Result<(), anyhow::Error> {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -29,6 +29,8 @@ pub mod utils {
     #[derive(Clone, Debug)]
     pub struct ExportError(String);
 
+    #[derive(Clone, Debug)]
+    pub struct CopyError(String);
 
     pub async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
         let time = chrono::Utc::now();
@@ -150,21 +152,18 @@ pub mod utils {
         Ok(())
     }
 
-pub fn copy_to_clipboard(image: &Option<RgbaImage>) -> Result<(), Box<dyn std::error::Error>> {
-        let mut ctx = Clipboard::new()?;
-        let binding = image.clone();
-        return match binding {
-            Some(b) => {
-                let img = ImageData {
-                    width: b.width() as usize,
-                    height: b.height() as usize,
-                    bytes: Cow::from(b.as_bytes())
-                };
-                ctx.set_image(img)?;
-                Ok(())
-            },
-            _ => Err(Box::new(Error::ContentNotAvailable))
-        };
+pub async fn copy_to_clipboard(image: Option<RgbaImage>) -> Result<(), CopyError> {
+        if image.is_none() {return Err(CopyError("Nothing to copy".to_string()))}
+        let mut ctx = Clipboard::new().map_err(|err| CopyError(format!("{:?}", err))).expect("Error");
+        let binding = image.clone().unwrap();
+        tokio::task::spawn_blocking(move ||{
+                    let img = ImageData {
+                        width: binding.width() as usize,
+                        height: binding.height() as usize,
+                        bytes: Cow::from(binding.as_bytes())
+                    };
+                    ctx.set_image(img).map(|_| ()).map_err(|err| CopyError(format!("{:?}", err)))
+        }).await.expect("Blocking task to finish")
     }
 
     pub fn num_of_screens() -> usize {
