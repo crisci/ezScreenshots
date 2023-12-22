@@ -27,7 +27,6 @@ use iced::Length::Fill;
 use crate::crop::CropArea;
 use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
-use crate::utils::select_path;
 
 use crate::toast::toast_logic::{Toast, Status, Manager, DEFAULT_TIMEOUT};
 
@@ -423,7 +422,7 @@ impl Application for BootstrapApp {
                         std::process::exit(0)
                     }
                     Message::PathSelected => {
-                        app.save_path = select_path().unwrap();
+                        app.save_path = select_path(app.save_path());
                         Command::none()
                     }
                     Message::SetDefaultPath => {

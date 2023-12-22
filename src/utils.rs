@@ -1,6 +1,3 @@
-use nfd::{open_pick_folder, Response};
-
-
 pub mod utils {
     use std::fs::{File, self};
     use std::io::{BufReader, Write};
@@ -16,6 +13,8 @@ pub mod utils {
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
     use gif::{Frame,Encoder};
     use arboard::{Clipboard, ImageData};
+    use rfd::FileDialog;
+    use std::path::Path;
 
     pub fn screenshot(target: &mut App) -> Result<(), anyhow::Error> {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -172,21 +171,13 @@ pub async fn copy_to_clipboard(image: Option<DynamicImage>) -> Result<(), CopyEr
         screen.len()
     }
 
- }
-    pub fn select_path() -> Option<String>{
-        let result = open_pick_folder(None);
+    pub fn select_path(path: String) -> String{
+        let default_path = Path::new(path.as_str());
+        let result = FileDialog::new().set_directory(default_path).pick_folder();
         match result {
-            Ok(Response::Okay(folder_path)) => {
-                Some(folder_path)
-            },
-            Ok(Response::OkayMultiple(_)) => {
-                None
-            },
-            Ok(Response::Cancel) => {
-                None
-            },
-            Err(_) => {
-                panic!("Error selection folder");
-            }
+            Some(selected_path) => {selected_path.into_os_string().into_string().unwrap()},
+            None => {path}
         }
     }
+ }
+
