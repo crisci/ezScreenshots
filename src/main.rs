@@ -9,6 +9,7 @@ mod utils;
 mod hotkeys;
 mod modals;
 mod toast;
+mod crop;
 
 pub fn main() -> iced::Result {
     let settings: iced::Settings<()> = iced::Settings {

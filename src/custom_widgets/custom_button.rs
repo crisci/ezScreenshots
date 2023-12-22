@@ -17,11 +17,12 @@ impl button::StyleSheet for RadiusButton {
 
     fn active(&self, _: &Self::Style) -> Appearance {
             return match self.label.as_str() {
-                "Resize" => resize_theme(),
+                "Crop" => crop_theme(),
                 "Delete" => delete_theme(),
                 "Save" => save_theme(),
                 "Cancel" => cancel_theme(),
                 "Folder" => folder_theme(),
+                "Confirm" => save_theme(),
                 _ => screenshot_theme()
             }
     }
@@ -43,7 +44,7 @@ fn delete_theme() -> Appearance {
     }
 }
 
-fn resize_theme() -> Appearance {
+fn crop_theme() -> Appearance {
     Appearance {
         border_radius: 100.0.into(),
         background: Option::from(iced::Background::Color(Color::from(color!(0xFF8328)))),

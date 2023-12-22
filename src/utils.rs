@@ -11,7 +11,7 @@ pub mod utils {
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
-    use image::{ColorType, EncodableLayout, RgbaImage};
+    use image::{ColorType, DynamicImage, EncodableLayout, RgbaImage};
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
     use gif::{Frame,Encoder};
@@ -22,7 +22,8 @@ pub mod utils {
         let screens = Screen::all().expect("Monitor not recognized");
         if target.display_selected() > screens.len() - 1 { return Err(anyhow::Error::msg("Out of range screens"))};
         let image = screens[target.display_selected()].capture()?;
-        target.set_screenshot(Some(image));
+        let dyn_image = DynamicImage::from(image);
+        target.set_screenshot(Some(dyn_image));
         Ok(())
     }
 
@@ -32,14 +33,14 @@ pub mod utils {
     #[derive(Clone, Debug)]
     pub struct CopyError(String);
 
-    pub async fn save_to_png(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+    pub async fn save_to_png(screenshot: DynamicImage, path: String) -> Result<String, ExportError> {
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
         let path_image = format!("{}/SCRN_{}.png", path, string_time);
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
                 &path_image,
-                &screenshot.clone().into_raw(),
+                &screenshot.clone().as_bytes().to_vec(),
                 screenshot.width(),
                 screenshot.height(),
                 ColorType::Rgba8,
@@ -51,14 +52,14 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_jpeg(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
+    pub async fn save_to_jpeg(screenshot: DynamicImage, path: String) -> Result<String, ExportError> {
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
         let path_image = format!("{}/SCRN_{}.jpeg", path, string_time);
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
                 &path_image,
-                &screenshot.clone().into_raw(),
+                &screenshot.clone().as_bytes().to_vec(),
                 screenshot.width(),
                 screenshot.height(),
                 ColorType::Rgba8,
@@ -70,8 +71,8 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_gif(screenshot: RgbaImage, path: String) -> Result<String, ExportError> {
-        let frame = Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.into_raw(),30);
+    pub async fn save_to_gif(screenshot: DynamicImage, path: String) -> Result<String, ExportError> {
+        let frame = Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.as_bytes().to_vec(),30);
         let time = chrono::Utc::now();
         let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
         let path_image = format!("{}/SCRN_{}.gif", path, string_time);
@@ -152,7 +153,7 @@ pub mod utils {
         Ok(())
     }
 
-pub async fn copy_to_clipboard(image: Option<RgbaImage>) -> Result<(), CopyError> {
+pub async fn copy_to_clipboard(image: Option<DynamicImage>) -> Result<(), CopyError> {
         if image.is_none() {return Err(CopyError("Nothing to copy".to_string()))}
         let mut ctx = Clipboard::new().map_err(|err| CopyError(format!("{:?}", err))).expect("Error");
         let binding = image.clone().unwrap();
@@ -160,7 +161,7 @@ pub async fn copy_to_clipboard(image: Option<RgbaImage>) -> Result<(), CopyError
                     let img = ImageData {
                         width: binding.width() as usize,
                         height: binding.height() as usize,
-                        bytes: Cow::from(binding.as_bytes())
+                        bytes: Cow::from(binding.as_bytes().to_vec())
                     };
                     ctx.set_image(img).map(|_| ()).map_err(|err| CopyError(format!("{:?}", err)))
         }).await.expect("Blocking task to finish")
