@@ -31,6 +31,7 @@ impl button::StyleSheet for ButtonStyle {
             ..self.active(style)
         }
     }
+
 }
 
 fn return_action(label: &str) -> Modals {

@@ -3,12 +3,12 @@ use iced::window::Position;
 
 mod app;
 mod custom_widgets;
-mod resize;
 mod menu;
 mod utils;
 mod hotkeys;
 mod modals;
 mod toast;
+mod crop;
 
 pub fn main() -> iced::Result {
     let settings: iced::Settings<()> = iced::Settings {
