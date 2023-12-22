@@ -3,7 +3,6 @@ use iced::window::Position;
 
 mod app;
 mod custom_widgets;
-mod resize;
 mod menu;
 mod utils;
 mod hotkeys;

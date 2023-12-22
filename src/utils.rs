@@ -11,7 +11,7 @@ pub mod utils {
     use image as img;
     use chrono::{Datelike, Timelike};
     use directories::UserDirs;
-    use image::{ColorType, DynamicImage, EncodableLayout, RgbaImage};
+    use image::{ColorType, DynamicImage};
     use screenshots::Screen;
     use crate::{app::App, hotkeys::hotkeys_logic::Hotkeys};
     use gif::{Frame,Encoder};

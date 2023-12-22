@@ -104,7 +104,6 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                             .width(Length::Fill)
                             .center_x()
                             .center_y()),
-                        SaveState::Done => foot_row.push(Text::new("Screenshot saved correctly!").width(Length::Fill).horizontal_alignment(Center))
                     },
                 )
                 .max_width(300.0)

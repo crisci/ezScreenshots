@@ -49,7 +49,7 @@ impl canvas::Program<Message> for CropArea {
     type State = Option<CropState>;
 
     fn update(&self, state: &mut Self::State, event: canvas::Event, _bounds: Rectangle, cursor: Cursor) -> (Status, Option<Message>) {
-        if !self.is_cropping && state.is_some() {
+        if !self.is_cropping {
             *state = None;
             return (Status::Ignored, Some(Message::None));
         };

@@ -6,13 +6,12 @@ use iced::widget::{container, column, row, text, svg, image, Row, responsive, Ca
 use iced::widget::space::Space;
 use iced::window::Mode;
 use iced_aw::{floating_element, modal, SelectionList, SelectionListStyles};
-use screenshots::image::{RgbaImage, DynamicImage};
+use screenshots::image::{DynamicImage};
 use iced_aw::native::Spinner;
 
 use crate::custom_widgets::image_button;
 use crate::hotkeys::hotkeys_logic::{Hotkeys, HotkeysMap};
 use crate::menu::top_menu;
-use crate::resize::Modal;
 
 use crate::app::SaveState::{Nothing, OnGoing};
 use crate::modals::save_as_modal::{Formats, save_as_modal};
@@ -36,7 +35,6 @@ use crate::toast::toast_logic::{Toast, Status, Manager, DEFAULT_TIMEOUT};
 #[derive(Debug, Default)]
 pub struct App {
     screenshot: Option<DynamicImage>,
-    resize: bool,
     default_path: String,
     save_path: String,
     save_state: SaveState,
@@ -63,7 +61,7 @@ pub struct App {
     //Crop mode
     crop_area: (Point, Point),
     crop_mode: bool,
-    temp_img: Option<DynamicImage>
+    temp_img: Option<DynamicImage>,
 }
 
 impl App {
@@ -86,7 +84,6 @@ impl App {
         }
         Self {
             screenshot: None,
-            resize: false,
             default_path: path.clone(),
             save_path: path,
             save_state: SaveState::Nothing,
@@ -160,7 +157,6 @@ pub enum SaveState {
     #[default]
     Nothing,
     OnGoing,
-    Done,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -204,7 +200,6 @@ pub enum Message {
     ButtonReleased(Point, Point),
     Crop,
     CropModeSwitch,
-    Reset,
     None,
 }
 
@@ -449,11 +444,11 @@ impl Application for BootstrapApp {
                         };
                         if !app.toasts.contains(&toast) { app.toasts.push(toast) }
                         Command::none()
-                    },
+                    }
                     Message::CloseToast(index) => {
                         app.toasts.remove(index);
                         Command::none()
-                    },
+                    }
                     Message::ButtonReleased(p1, p2) => {
                         let screenshot = app.screenshot.clone().unwrap();
                         app.crop_area = (
@@ -461,24 +456,25 @@ impl Application for BootstrapApp {
                             Point::new(p2.x * (screenshot.width() as f32), p2.y * (screenshot.height() as f32)),
                         );
                         Command::none()
-                    },
+                    }
                     Message::Crop => {
-                       //TODO: implement with dynamic image
                         let width = app.crop_area.1.x - app.crop_area.0.x;
                         let height = app.crop_area.1.y - app.crop_area.0.y;
-                        match (width > 0., height >0.) {
-                            (true,true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
-                            (true,false) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.1.y as u32, width.abs() as u32, height.abs() as u32)),
-                            (false,true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.1.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
-                            (false,false) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.1.x as u32, app.crop_area.1.y as u32, width.abs() as u32, height.abs() as u32))
+                        if width.abs() <= 5. && height.abs() <= 5. {
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "The area drawn is too small!".into(), Status::Danger))
+                        };
+                        match (width > 0., height > 0.) {
+                            (true, true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
+                            (true, false) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.1.y as u32, width.abs() as u32, height.abs() as u32)),
+                            (false, true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.1.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
+                            (false, false) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.1.x as u32, app.crop_area.1.y as u32, width.abs() as u32, height.abs() as u32))
                         }
                         app.temp_img = app.screenshot.clone();
                         // Reset crop mode after cropping
                         app.crop_mode = false;
                         Command::none()
-                    },
+                    }
                     Message::CropModeSwitch => {
-
                         if !app.crop_mode {
                             // Enabled
                             app.crop_area = (Default::default(), Default::default());
@@ -621,7 +617,6 @@ impl Application for BootstrapApp {
                     let crop_confirm_button = image_button("crop_confirm", "Confirm", Message::Crop);
                     let crop_cancel_button = image_button("crop_cancel", "Cancel", Message::CropModeSwitch);
                     bottom_container = row![crop_cancel_button].spacing(10).push(crop_confirm_button).align_items(Alignment::Center);
-                    //TODO: implement the reset button
                 }
 
 
