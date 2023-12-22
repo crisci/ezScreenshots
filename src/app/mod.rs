@@ -19,7 +19,7 @@ use crate::utils::utils::*;
 
 use crate::modals::setdefaultpath_modal::setpath_modal;
 
-use iced::keyboard::{self};
+use iced::keyboard::{self, KeyCode};
 use crate::modals::delay_modal::delay_modal;
 
 use iced::event::Event;
@@ -193,6 +193,7 @@ pub enum Message {
     PathSelected,
     SetDefaultPath,
     MonitorSelected(usize, String),
+    SwitchMonitor(KeyCode),
     Loaded(Result<(), String>),
     FontLoaded(Result<(), font::Error>),
     AddToast(String, String, Status),
@@ -435,6 +436,23 @@ impl Application for BootstrapApp {
                         app.display_selected = index;
                         app.manual_display_selection = None;
                         Command::none()
+                    },
+                    Message::SwitchMonitor(k) => {
+                        if app.screens.len() > 1 {
+                            match k {
+                                KeyCode::Up => {
+                                    app.display_selected = (app.display_selected + 1) % app.screens.len();
+                                    app.manual_display_selection = Some(app.display_selected);
+                                }
+                                KeyCode::Down => {
+                                    let index = app.display_selected as i32;
+                                    app.display_selected = (index - 1) as usize % app.screens.len();
+                                    app.manual_display_selection = Some(app.display_selected);
+                                }
+                                _ => ()
+                            };
+                        }
+                        Command::none()
                     }
                     Message::AddToast(title, body, level) => {
                         let toast = Toast {
@@ -461,7 +479,7 @@ impl Application for BootstrapApp {
                         let width = app.crop_area.1.x - app.crop_area.0.x;
                         let height = app.crop_area.1.y - app.crop_area.0.y;
                         if width.abs() <= 5. && height.abs() <= 5. {
-                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "The area drawn is too small!".into(), Status::Danger))
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "The area drawn is too small!".into(), Status::Danger));
                         };
                         match (width > 0., height > 0.) {
                             (true, true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
@@ -506,7 +524,7 @@ impl Application for BootstrapApp {
                 .center_x()
                 .into(),
             BootstrapApp::Loaded(app) => {
-                let menu = top_menu(app);
+                let menu = if !app.crop_mode {top_menu(app)} else {column![]};
                 let selection_list: SelectionList<_, Message> = SelectionList::new_with(
                     &app.screens,
                     Message::MonitorSelected,
@@ -644,22 +662,17 @@ impl Application for BootstrapApp {
                     .height(Length::Fill)
                     .padding(5)
                     .center_x()
-        
+
                 ];
                 let content2 = column![modal(container(content), overlay)
                     .backdrop(Message::CloseModal)
                     .on_esc(Message::CloseModal)
                     .align_y(alignment::Vertical::Center)
                     ];
-                if app.crop_mode {
-                    Manager::new(content2, &app.toasts, Message::CloseToast)
-                        .timeout(DEFAULT_TIMEOUT)
-                        .into()
-                } else {
-                    Manager::new(content2, &app.toasts, Message::CloseToast)
-                        .timeout(DEFAULT_TIMEOUT)
-                        .into()
-                }
+
+                Manager::new(content2, &app.toasts, Message::CloseToast)
+                    .timeout(DEFAULT_TIMEOUT)
+                    .into()
             }
         };
     }
@@ -668,6 +681,7 @@ impl Application for BootstrapApp {
         events_with(move |event, _status| match event {
             Event::Keyboard(keyboard_event) => match keyboard_event {
                 keyboard::Event::CharacterReceived(c) => Some(Message::KeyboardComb(c)),
+                keyboard::Event::KeyPressed { key_code, .. }  => Some(Message::SwitchMonitor(key_code)),
                 _ => None,
             },
             _ => None,
