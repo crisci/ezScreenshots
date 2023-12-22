@@ -62,7 +62,8 @@ pub struct App {
     manual_display_selection: Option<usize>,
     //Crop mode
     crop_area: (Point, Point),
-    crop_mode: bool
+    crop_mode: bool,
+    temp_img: Option<DynamicImage>
 }
 
 impl App {
@@ -106,6 +107,7 @@ impl App {
             crop_area: (Default::default(), Default::default()),
             copy_status: Default::default(),
             crop_mode: false,
+            temp_img: None,
         }
     }
 
@@ -300,6 +302,7 @@ impl Application for BootstrapApp {
                             }
                             Ok(_) => {
                                 app.manual_display_selection = Some(app.display_selected);
+                                app.temp_img = app.screenshot.clone();
                                 Command::none()
                             }
                         };
@@ -461,18 +464,29 @@ impl Application for BootstrapApp {
                     },
                     Message::Crop => {
                        //TODO: implement with dynamic image
-
+                        let width = app.crop_area.1.x - app.crop_area.0.x;
+                        let height = app.crop_area.1.y - app.crop_area.0.y;
+                        match (width > 0., height >0.) {
+                            (true,true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
+                            (true,false) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.1.y as u32, width.abs() as u32, height.abs() as u32)),
+                            (false,true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.1.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
+                            (false,false) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.1.x as u32, app.crop_area.1.y as u32, width.abs() as u32, height.abs() as u32))
+                        }
+                        app.temp_img = app.screenshot.clone();
                         // Reset crop mode after cropping
                         app.crop_mode = false;
                         Command::none()
                     },
                     Message::CropModeSwitch => {
-                        // Toggle crop mode
-                        app.crop_mode = !app.crop_mode;
-                        // Reset the crop area when switching back to crop mode
-                        if app.crop_mode {
+
+                        if !app.crop_mode {
+                            // Enabled
                             app.crop_area = (Default::default(), Default::default());
+                        } else {
+                            // Disabled when cancel
+                            app.temp_img = app.screenshot.clone();
                         }
+                        app.crop_mode = !app.crop_mode;
                         Command::none()
                     }
                     _ => Command::none()
@@ -513,7 +527,7 @@ impl Application for BootstrapApp {
                     container(selection_list).width(60).height(55).center_x()
                 ]
                 );
-                let image: Element<Message> = if let Some(screenshot) = &app.screenshot
+                let mut image: Element<Message> = if let Some(screenshot) = &app.screenshot
                 {
                     image(image::Handle::from_pixels(
                         screenshot.width(),
@@ -526,6 +540,20 @@ impl Application for BootstrapApp {
                         .into()
                 } else {
                     text("Press the button to take a screenshot!").into()
+                };
+
+                if let Some(temp) = &app.temp_img {
+                    if app.crop_mode {
+                        image = iced::widget::image(image::Handle::from_pixels(
+                            temp.width(),
+                            temp.height(),
+                            temp.clone().as_bytes().to_vec(),
+                        ))
+                            .content_fit(ContentFit::Contain)
+                            .width(Length::Shrink)
+                            .height(Length::Shrink)
+                            .into()
+                    }
                 };
 
                 let floating_image = floating_element(
@@ -590,7 +618,7 @@ impl Application for BootstrapApp {
                 }
 
                 if app.crop_mode {
-                    let crop_confirm_button = image_button("crop_confirm", "Confirm", Message::None);
+                    let crop_confirm_button = image_button("crop_confirm", "Confirm", Message::Crop);
                     let crop_cancel_button = image_button("crop_cancel", "Cancel", Message::CropModeSwitch);
                     bottom_container = row![crop_cancel_button].spacing(10).push(crop_confirm_button).align_items(Alignment::Center);
                     //TODO: implement the reset button
