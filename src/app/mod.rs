@@ -1,7 +1,7 @@
 use directories::UserDirs;
 
 use iced::subscription::events_with;
-use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font, Font, Point};
+use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font, Font, Point, Background, Color};
 use iced::widget::{container, column, row, text, svg, image, Row, responsive, Canvas};
 use iced::widget::space::Space;
 use iced::window::Mode;

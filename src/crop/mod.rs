@@ -49,11 +49,12 @@ impl canvas::Program<Message> for CropArea {
     type State = Option<CropState>;
 
     fn update(&self, state: &mut Self::State, event: canvas::Event, _bounds: Rectangle, cursor: Cursor) -> (Status, Option<Message>) {
+        let adjusted_position = Point::new(_bounds.position().x + 4., _bounds.position().y + 4.);
         if !self.is_cropping {
             *state = None;
             return (Status::Ignored, Some(Message::None));
         };
-        if let Some(_) = cursor.position_in(Rectangle::new(_bounds.position(), Size::new(self.width, self.height))) {
+        if let Some(_) = cursor.position_in(Rectangle::new(adjusted_position, Size::new(self.width, self.height))) {
             return match event {
                 canvas::Event::Mouse(m) => match m {
                     mouse::Event::ButtonPressed(l) => {
@@ -127,6 +128,7 @@ impl canvas::Program<Message> for CropArea {
         };
         return match state {
             Some(s) => {
+                let adjusted_position = Point::new(_bounds.position().x + 4., _bounds.position().y + 4.);
                 let width = s.ending_point.x - s.initial_point.x;
                 let height = s.ending_point.y - s.initial_point.y;
                 let p = state.unwrap().initial_point;
@@ -146,7 +148,8 @@ impl canvas::Program<Message> for CropArea {
         };
     }
     fn mouse_interaction(&self, _state: &Self::State, _bounds: Rectangle, _cursor: Cursor) -> Interaction {
-        let rect = Rectangle::new(_bounds.position(), _bounds.size());
+        let adjusted_position = Point::new(_bounds.position().x + 4., _bounds.position().y + 4.);
+        let rect = Rectangle::new(adjusted_position, _bounds.size());
         if _cursor.is_over(rect) && self.is_cropping {
             Interaction::Crosshair
         } else {
