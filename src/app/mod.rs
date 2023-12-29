@@ -1,3 +1,4 @@
+use chrono::{Datelike, Timelike};
 use directories::UserDirs;
 
 use iced::subscription::events_with;
@@ -36,6 +37,7 @@ pub struct App {
     screenshot: Option<DynamicImage>,
     default_path: String,
     save_path: String,
+    save_name: String,
     save_state: SaveState,
     //Needed for save as section
     formats: Vec<String>,
@@ -85,6 +87,7 @@ impl App {
             screenshot: None,
             default_path: path.clone(),
             save_path: path,
+            save_name: "".to_string(),
             save_state: SaveState::Nothing,
             formats: vec,
             export_format: Formats::Png,
@@ -118,6 +121,9 @@ impl App {
 
     pub(crate) fn save_path(&self) -> String {
         self.save_path.clone()
+    }
+    pub(crate) fn save_name(&self) -> String {
+        self.save_name.clone()
     }
 
     pub(crate) fn save_state(&self) -> SaveState {
@@ -191,6 +197,7 @@ pub enum Message {
     Quit,
     PathSelected,
     SetDefaultPath,
+    NameChanges(String),
     MonitorSelected(usize, String),
     SwitchMonitor(KeyCode),
     Loaded(Result<(), String>),
@@ -265,9 +272,12 @@ impl Application for BootstrapApp {
                                 return match app.save_state {
                                     Nothing => {
                                         let path = app.save_path.clone();
+                                        let time = chrono::Utc::now();
+                                        let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
+                                        app.save_name = string_time;
                                         let screenshot = app.screenshot.clone().unwrap();
                                         app.save_state = OnGoing;
-                                        Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved)
+                                        Command::perform(save_to_png(screenshot, path, app.save_name()), Message::ScreenshotSaved)
                                     }
                                     _ => Command::none()
                                 };
@@ -317,6 +327,9 @@ impl Application for BootstrapApp {
                     }
                     Message::OpenSaveAsModal => {
                         app.modal = Modals::SaveAs;
+                        let time = chrono::Utc::now();
+                        let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
+                        app.save_name = string_time;
                         Command::none()
                     }
                     Message::OpenDelayModal => {
@@ -347,14 +360,18 @@ impl Application for BootstrapApp {
                         let path = app.save_path.clone();
                         app.save_state = SaveState::OnGoing;
                         match app.export_format {
-                            Formats::Png => { Command::perform(save_to_png(screenshot, path), Message::ScreenshotSaved) }
-                            Formats::Gif => { Command::perform(save_to_gif(screenshot, path), Message::ScreenshotSaved) }
-                            Formats::Jpeg => { Command::perform(save_to_jpeg(screenshot, path), Message::ScreenshotSaved) }
+                            Formats::Png => { Command::perform(save_to_png(screenshot, path, app.save_name()), Message::ScreenshotSaved) }
+                            Formats::Gif => { Command::perform(save_to_gif(screenshot, path, app.save_name()), Message::ScreenshotSaved) }
+                            Formats::Jpeg => { Command::perform(save_to_jpeg(screenshot, path, app.save_name()), Message::ScreenshotSaved) }
                         }
                     }
                     Message::FormatSelected(_, format) => {
                         app.export_format = Formats::from(format);
                         app.manual_select = None;
+                        Command::none()
+                    }
+                    Message::NameChanges(value) => {
+                        app.save_name = value;
                         Command::none()
                     }
                     Message::DelayChanged(value) => {

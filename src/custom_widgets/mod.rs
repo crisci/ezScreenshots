@@ -42,6 +42,7 @@ pub fn rounded_button(label: &str, message: Message) -> iced::widget::Button<Mes
 pub fn rounded_container<'a>(text: String) -> iced::widget::Container<'a, Message, Renderer> {
     container(Text::new(text.clone()).horizontal_alignment(Horizontal::Left))
         .style(iced::theme::Container::Custom(Box::new(CustomContainer::new(Background::Color(Color::TRANSPARENT)))))
+        .padding(5.0)
 }
 
 pub fn image_button<'a>(image_name: &'a str, description: &'static str, message: Message) -> Container<'a, Message, Renderer> {

@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use iced::alignment::Horizontal::Center;
 use iced::{Alignment, Font, Length};
-use iced::widget::{Column, container, Row, Text};
+use iced::widget::{Column, container, Row, Text, text_input};
 use iced_aw::{Card, SelectionList, SelectionListStyles};
 use iced_aw::native::Spinner;
 use crate::app::{App, Message, SaveState};
@@ -76,6 +76,13 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
         .center_x()
         .center_y();
 
+    let choose_name = container(Row::new()
+        .spacing(10)
+        .push(text_input("", &app.save_name())
+            .on_input(Message::NameChanges)
+            .padding(15)))
+        .center_x()
+        .center_y();
 
 
     return
@@ -88,6 +95,8 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     .push(selection_list)
                     .push(Text::new("Select the output folder"))
                     .push(choose_path)
+                    .push(Text::new("Select the name"))
+                    .push(choose_name)
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
             )

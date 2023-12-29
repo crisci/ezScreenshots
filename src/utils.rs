@@ -32,10 +32,8 @@ pub mod utils {
     #[derive(Clone, Debug)]
     pub struct CopyError(String);
 
-    pub async fn save_to_png(screenshot: DynamicImage, path: String) -> Result<String, ExportError> {
-        let time = chrono::Utc::now();
-        let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-        let path_image = format!("{}/SCRN_{}.png", path, string_time);
+    pub async fn save_to_png(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
+        let path_image = format!("{}/SCRN_{}.png", path, name);
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
                 &path_image,
@@ -51,10 +49,8 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_jpeg(screenshot: DynamicImage, path: String) -> Result<String, ExportError> {
-        let time = chrono::Utc::now();
-        let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-        let path_image = format!("{}/SCRN_{}.jpeg", path, string_time);
+    pub async fn save_to_jpeg(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
+        let path_image = format!("{}/SCRN_{}.jpeg", path, name);
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
                 &path_image,
@@ -70,11 +66,9 @@ pub mod utils {
             .expect("Blocking task to finish")
     }
 
-    pub async fn save_to_gif(screenshot: DynamicImage, path: String) -> Result<String, ExportError> {
+    pub async fn save_to_gif(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
         let frame = Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.as_bytes().to_vec(),30);
-        let time = chrono::Utc::now();
-        let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-        let path_image = format!("{}/SCRN_{}.gif", path, string_time);
+        let path_image = format!("{}/SCRN_{}.gif", path, name);
         let mut file_out = File::create(path_image.clone()).unwrap();
         tokio::task::spawn_blocking(move || {
             let mut encoder = Encoder::new(&mut file_out, frame.width, frame.height, &[]).unwrap();
