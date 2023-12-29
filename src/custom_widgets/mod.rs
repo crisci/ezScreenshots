@@ -1,13 +1,16 @@
 mod custom_button;
+mod custom_container;
 
 use iced::{widget::{svg, Container, column, text, container, button}, Renderer, Length, color, Alignment, theme, Color, application};
 use iced::alignment::Horizontal;
 use iced::application::Appearance;
+use iced::widget::container::StyleSheet;
 use iced::widget::Text;
 
 
 use crate::custom_widgets::custom_button::RadiusButton;
 use crate::app::Message;
+use crate::custom_widgets::custom_container::{ContainerC, CustomContainer};
 
 #[derive(Default)]
 pub struct CustomTheme {}
@@ -34,6 +37,11 @@ pub fn rounded_button<'a>(label: &'a str, message: Message) -> iced::widget::But
         .style(iced::theme::Button::Custom(Box::new(RadiusButton::new(label.to_string()))))
         .width(Length::Fill)
         .on_press(message)
+}
+
+pub fn rounded_container<'a>(text: String) -> iced::widget::Container<'a, Message, Renderer> {
+    container(Text::new(text.clone()).horizontal_alignment(Horizontal::Left))
+        .style(iced::theme::Container::Custom(Box::new(CustomContainer::new(ContainerC::Bordered))))
 }
 
 pub fn image_button<'a>(image_name: &'a str, description: &'static str, message: Message) -> Container<'a, Message, Renderer> {

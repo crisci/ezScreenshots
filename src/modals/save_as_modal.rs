@@ -5,7 +5,7 @@ use iced::widget::{Column, container, Row, Text};
 use iced_aw::{Card, SelectionList, SelectionListStyles};
 use iced_aw::native::Spinner;
 use crate::app::{App, Message, SaveState};
-use crate::custom_widgets::{image_button, rounded_button};
+use crate::custom_widgets::{image_button, rounded_button, rounded_container};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Formats {
@@ -69,7 +69,7 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
 
     let choose_path = container(Row::new()
         .spacing(10)
-        .push(Text::new(app.save_path()).width(Length::FillPortion(6)))
+        .push(rounded_container(app.save_path()).width(Length::FillPortion(6)))
         .push(image_button("folder","Folder", Message::PathSelected).width(Length::FillPortion(1)))
         .spacing(10)
         .align_items(Alignment::End))
