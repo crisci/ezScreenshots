@@ -1,8 +1,7 @@
-use chrono::{Datelike, Timelike};
 use directories::UserDirs;
 
 use iced::subscription::events_with;
-use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font, Font, Point, Background, Color};
+use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font, Font, Point};
 use iced::widget::{container, column, row, text, svg, image, Row, responsive, Canvas};
 use iced::widget::space::Space;
 use iced::window::Mode;
@@ -271,13 +270,10 @@ impl Application for BootstrapApp {
                             Modals::Save => {
                                 return match app.save_state {
                                     Nothing => {
-                                        let path = app.save_path.clone();
-                                        let time = chrono::Utc::now();
-                                        let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-                                        app.save_name = string_time;
+                                        app.save_name = get_name_from_time();
                                         let screenshot = app.screenshot.clone().unwrap();
                                         app.save_state = OnGoing;
-                                        Command::perform(save_to_png(screenshot, path, app.save_name()), Message::ScreenshotSaved)
+                                        Command::perform(save_to_png(screenshot, app.save_path(), app.save_name()), Message::ScreenshotSaved)
                                     }
                                     _ => Command::none()
                                 };
@@ -327,9 +323,7 @@ impl Application for BootstrapApp {
                     }
                     Message::OpenSaveAsModal => {
                         app.modal = Modals::SaveAs;
-                        let time = chrono::Utc::now();
-                        let string_time = format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second());
-                        app.save_name = string_time;
+                        app.save_name = get_name_from_time();
                         Command::none()
                     }
                     Message::OpenDelayModal => {
@@ -357,12 +351,11 @@ impl Application for BootstrapApp {
                             return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "Screenshot not available".into(), Status::Danger));
                         };
                         let screenshot = app.screenshot.clone().unwrap();
-                        let path = app.save_path.clone();
                         app.save_state = SaveState::OnGoing;
                         match app.export_format {
-                            Formats::Png => { Command::perform(save_to_png(screenshot, path, app.save_name()), Message::ScreenshotSaved) }
-                            Formats::Gif => { Command::perform(save_to_gif(screenshot, path, app.save_name()), Message::ScreenshotSaved) }
-                            Formats::Jpeg => { Command::perform(save_to_jpeg(screenshot, path, app.save_name()), Message::ScreenshotSaved) }
+                            Formats::Png => { Command::perform(save_to_png(screenshot, app.save_path(), app.save_name()), Message::ScreenshotSaved) }
+                            Formats::Gif => { Command::perform(save_to_gif(screenshot, app.save_path(), app.save_name()), Message::ScreenshotSaved) }
+                            Formats::Jpeg => { Command::perform(save_to_jpeg(screenshot, app.save_path(), app.save_name()), Message::ScreenshotSaved) }
                         }
                     }
                     Message::FormatSelected(_, format) => {

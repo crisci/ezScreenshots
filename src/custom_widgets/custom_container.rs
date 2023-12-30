@@ -1,9 +1,6 @@
-    use iced::widget::{button, container, text};
-    use iced::{application, Background, color, Theme};
-    use iced::font::Weight::Black;
-    use iced::theme::Container;
+    use iced::widget::container;
+    use iced::{Background,Theme};
     use iced_aw::style::colors::BLACK;
-    use iced_native::widget::scrollable::style;
 
     #[derive(Debug, Clone, Copy, Default)]
     pub struct CustomContainer {

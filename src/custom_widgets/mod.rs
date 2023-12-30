@@ -4,7 +4,6 @@ pub(crate) mod custom_container;
 use iced::{widget::{svg, Container, column, text, container, button}, Renderer, Length, color, Alignment, theme, Color, application, Background};
 use iced::alignment::Horizontal;
 use iced::application::Appearance;
-use iced::widget::container::StyleSheet;
 use iced::widget::Text;
 
 

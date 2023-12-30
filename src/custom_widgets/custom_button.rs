@@ -1,6 +1,6 @@
 use iced::{color, Color, Theme};
 use std::default::Default;
-use iced::widget::{button, button::Appearance, container,Text};
+use iced::widget::{button, button::Appearance};
 
 #[derive(Default)]
 pub struct RadiusButton {

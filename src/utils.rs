@@ -173,5 +173,10 @@ pub async fn copy_to_clipboard(image: Option<DynamicImage>) -> Result<(), CopyEr
             None => {path}
         }
     }
+
+    pub fn get_name_from_time() -> String {
+        let time = chrono::Utc::now();
+        format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second())
+    }
  }
 
