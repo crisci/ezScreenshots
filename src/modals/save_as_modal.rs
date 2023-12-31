@@ -80,6 +80,7 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
         .spacing(10)
         .push(text_input("", &app.save_name())
             .on_input(Message::NameChanges)
+            .on_submit(Message::SaveAsButtonPressed)
             .padding(15)))
         .center_x()
         .center_y();

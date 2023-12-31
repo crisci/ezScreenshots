@@ -33,7 +33,14 @@ pub mod utils {
     pub struct CopyError(String);
 
     pub async fn save_to_png(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
-        let path_image = format!("{}/SCRN_{}.png", path, name);
+        let mut path_image = format!("{}/SCRN_{}.png", path, name);
+        if Path::new(&path_image).exists() {
+            let mut index_name = 1;
+            while Path::new(&format!("{}/SCRN_{}({}).png", path, name,index_name)).exists() {
+                index_name += 1;
+            }
+            path_image.insert_str(path_image.len() - 4, &format!("({})", index_name))
+        }
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
                 &path_image,
@@ -50,7 +57,14 @@ pub mod utils {
     }
 
     pub async fn save_to_jpeg(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
-        let path_image = format!("{}/SCRN_{}.jpeg", path, name);
+        let mut path_image = format!("{}/SCRN_{}.jpeg", path, name);
+        if Path::new(&path_image).exists() {
+            let mut index_name = 1;
+            while Path::new(&format!("{}/SCRN_{}({}).jpeg", path, name,index_name)).exists() {
+                index_name += 1;
+            }
+            path_image.insert_str(path_image.len() - 5, &format!("({})", index_name))
+        }
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
                 &path_image,
@@ -68,7 +82,14 @@ pub mod utils {
 
     pub async fn save_to_gif(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
         let frame = Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.as_bytes().to_vec(),30);
-        let path_image = format!("{}/SCRN_{}.gif", path, name);
+        let mut path_image = format!("{}/SCRN_{}.gif", path, name);
+        if Path::new(&path_image).exists() {
+            let mut index_name = 1;
+            while Path::new(&format!("{}/SCRN_{}({}).gif", path, name,index_name)).exists() {
+                index_name += 1;
+            }
+            path_image.insert_str(path_image.len() - 4, &format!("({})", index_name))
+        }
         let mut file_out = File::create(path_image.clone()).unwrap();
         tokio::task::spawn_blocking(move || {
             let mut encoder = Encoder::new(&mut file_out, frame.width, frame.height, &[]).unwrap();
@@ -109,7 +130,6 @@ pub mod utils {
  pub fn default_path_file_read() -> Result<String, String> {
         let df = format!("{}", UserDirs::new().clone().unwrap().picture_dir().unwrap().to_str().unwrap());
         let serialized = serde_json::to_string(&df).map_err(|err| format!("Serialization error: {}", err))?;
-
         let dir = directories::BaseDirs::new().ok_or("Error getting base directories")?;
         let new_dir = PathBuf::from(format!("{}/{}", dir.data_local_dir().to_str().ok_or("Error getting data local dir")?, "ezScreenshots"));
         let file_path = new_dir.join("default_path.config");
