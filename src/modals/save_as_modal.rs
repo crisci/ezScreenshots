@@ -1,11 +1,11 @@
 use std::fmt::{Display, Formatter};
 use iced::alignment::Horizontal::Center;
 use iced::{Alignment, Font, Length};
-use iced::widget::{Column, container, Row, Text};
+use iced::widget::{Column, container, Row, Text, text_input};
 use iced_aw::{Card, SelectionList, SelectionListStyles};
 use iced_aw::native::Spinner;
 use crate::app::{App, Message, SaveState};
-use crate::custom_widgets::{image_button, rounded_button};
+use crate::custom_widgets::{image_button, rounded_button, rounded_container};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Formats {
@@ -69,13 +69,21 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
 
     let choose_path = container(Row::new()
         .spacing(10)
-        .push(Text::new(app.save_path()).width(Length::FillPortion(6)))
+        .push(rounded_container(app.save_path()).width(Length::FillPortion(6)))
         .push(image_button("folder","Folder", Message::PathSelected).width(Length::FillPortion(1)))
         .spacing(10)
         .align_items(Alignment::End))
         .center_x()
         .center_y();
 
+    let choose_name = container(Row::new()
+        .spacing(10)
+        .push(text_input("", &app.save_name())
+            .on_input(Message::NameChanges)
+            .on_submit(Message::SaveAsButtonPressed)
+            .padding(15)))
+        .center_x()
+        .center_y();
 
 
     return
@@ -88,6 +96,8 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     .push(selection_list)
                     .push(Text::new("Select the output folder"))
                     .push(choose_path)
+                    .push(Text::new("Select the name"))
+                    .push(choose_name)
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
             )
