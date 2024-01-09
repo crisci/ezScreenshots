@@ -6,6 +6,7 @@ use iced_aw::{Card, SelectionList, SelectionListStyles};
 use iced_aw::native::Spinner;
 use crate::app::{App, Message, SaveState};
 use crate::custom_widgets::{image_button, rounded_button, rounded_container};
+use std::path::{Path,MAIN_SEPARATOR};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Formats {
@@ -66,10 +67,17 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
         .spacing(10)
         .padding(5)
         .width(Length::Fill);
-
+    let prova = match app.save_path().len(){
+        0..=26 => app.save_path(),
+        26.. => {let mut prova2 = Path::new(&app.save_path()).iter().last().unwrap().to_str().unwrap().to_string();
+            if prova2.len() >= 22 {let (first, second) = prova2.split_at(19); format!("...{}{}...",MAIN_SEPARATOR,first)}
+            else{ format!("...{}{}",MAIN_SEPARATOR,prova2)}
+            }
+        _ => app.save_path()
+    };
     let choose_path = container(Row::new()
         .spacing(10)
-        .push(rounded_container(app.save_path()).width(Length::FillPortion(6)))
+        .push(rounded_container(prova).width(Length::FillPortion(6)))
         .push(image_button("folder","Folder", Message::PathSelected).width(Length::FillPortion(1)))
         .spacing(10)
         .align_items(Alignment::End))
