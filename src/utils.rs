@@ -14,7 +14,7 @@ pub mod utils {
     use gif::{Frame,Encoder};
     use arboard::{Clipboard, ImageData};
     use rfd::FileDialog;
-    use std::path::Path;
+    use std::path::{MAIN_SEPARATOR, Path};
 
     pub fn screenshot(target: &mut App) -> Result<(), anyhow::Error> {
         thread::sleep(Duration::from_millis((target.delay_time() * 1000. + 250.) as u64));
@@ -33,13 +33,13 @@ pub mod utils {
     pub struct CopyError(String);
 
     pub async fn save_to_png(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
-        let mut path_image = format!("{}/SCRN_{}.png", path, name);
+        let mut path_image = format!("{}/{}.png", path, name);
         if Path::new(&path_image).exists() {
             let mut index_name = 1;
-            while Path::new(&format!("{}/SCRN_{}({}).png", path, name,index_name)).exists() {
+            while Path::new(&format!("{}/{}({}).png", path, name,index_name)).exists() {
                 index_name += 1;
             }
-            path_image.insert_str(path_image.len() - 4, &format!("({})", index_name))
+            path_image = format!("{}/{}({}).png", path, name,index_name)
         }
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
@@ -57,13 +57,13 @@ pub mod utils {
     }
 
     pub async fn save_to_jpeg(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
-        let mut path_image = format!("{}/SCRN_{}.jpeg", path, name);
+        let mut path_image = format!("{}/{}.jpeg", path, name);
         if Path::new(&path_image).exists() {
             let mut index_name = 1;
-            while Path::new(&format!("{}/SCRN_{}({}).jpeg", path, name,index_name)).exists() {
+            while Path::new(&format!("{}/{}({}).jpeg", path, name,index_name)).exists() {
                 index_name += 1;
             }
-            path_image.insert_str(path_image.len() - 5, &format!("({})", index_name))
+            path_image = format!("{}/{}({}).jpeg", path, name,index_name)
         }
         tokio::task::spawn_blocking(move || {
             img::save_buffer(
@@ -82,13 +82,13 @@ pub mod utils {
 
     pub async fn save_to_gif(screenshot: DynamicImage, path: String, name: String) -> Result<String, ExportError> {
         let frame = Frame::from_rgba_speed(screenshot.width() as u16, screenshot.height() as u16, &mut screenshot.as_bytes().to_vec(),30);
-        let mut path_image = format!("{}/SCRN_{}.gif", path, name);
+        let mut path_image = format!("{}/{}.gif", path, name);
         if Path::new(&path_image).exists() {
             let mut index_name = 1;
-            while Path::new(&format!("{}/SCRN_{}({}).gif", path, name,index_name)).exists() {
+            while Path::new(&format!("{}/{}({}).gif", path, name,index_name)).exists() {
                 index_name += 1;
             }
-            path_image.insert_str(path_image.len() - 4, &format!("({})", index_name))
+            path_image = format!("{}/{}({}).gif", path, name,index_name)
         }
         let mut file_out = File::create(path_image.clone()).unwrap();
         tokio::task::spawn_blocking(move || {
@@ -196,7 +196,22 @@ pub async fn copy_to_clipboard(image: Option<DynamicImage>) -> Result<(), CopyEr
 
     pub fn get_name_from_time() -> String {
         let time = chrono::Utc::now();
-        format!("{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second())
+        format!("SCRN_{}{}{}{}{}", time.year(), time.month(), time.day(), time.hour(), time.second())
+    }
+
+    pub fn format_path(path: String, length: usize) -> String {
+        if path.len() < length { path }
+        else {
+            let mut it = Path::new(&path).iter();
+            it.next();
+            let first_path = it.next().unwrap().to_str().unwrap().to_string();
+            let last_path = it.last().unwrap().to_str().unwrap().to_string();
+            if format!("{}{}...{}{}", first_path, MAIN_SEPARATOR, MAIN_SEPARATOR, last_path).len() < length { format!("{}{}...{}{}", first_path, MAIN_SEPARATOR, MAIN_SEPARATOR, last_path) }
+            else if format!("...{}{}", MAIN_SEPARATOR, last_path).len() < length { format!("...{}{}", MAIN_SEPARATOR, last_path) }
+            else {
+                let (first, _second) = last_path.split_at(19);
+                format!("...{}{}...", MAIN_SEPARATOR, first)
+            }}
     }
  }
 

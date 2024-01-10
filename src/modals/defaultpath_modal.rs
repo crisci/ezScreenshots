@@ -2,12 +2,13 @@ use iced::{Alignment, Length};
 use iced::widget::{Column, Row, Text,container};
 use iced_aw::Card;
 use crate::app::{App, Message};
-use crate::custom_widgets::{image_button, rounded_button};
+use crate::custom_widgets::{image_button, rounded_button, rounded_container};
+use crate::utils::utils::format_path;
 
 pub fn setpath_modal(app: &App) -> Option<Card<Message>> {
     let choose_path = container(Row::new()
         .spacing(10)
-        .push(Text::new(app.save_path()).width(Length::FillPortion(6)))
+        .push(rounded_container(format_path(app.save_path(),27)).width(Length::FillPortion(6)))
         .push(image_button("folder","Folder", Message::PathSelected).width(Length::FillPortion(1)))
         .spacing(10)
         .align_items(Alignment::End))

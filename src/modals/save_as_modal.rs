@@ -6,6 +6,7 @@ use iced_aw::{Card, SelectionList, SelectionListStyles};
 use iced_aw::native::Spinner;
 use crate::app::{App, Message, SaveState};
 use crate::custom_widgets::{image_button, rounded_button, rounded_container};
+use crate::utils::utils::format_path;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Formats {
@@ -69,7 +70,7 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
 
     let choose_path = container(Row::new()
         .spacing(10)
-        .push(rounded_container(app.save_path()).width(Length::FillPortion(6)))
+        .push(rounded_container(format_path(app.save_path(),27)).width(Length::FillPortion(6)))
         .push(image_button("folder","Folder", Message::PathSelected).width(Length::FillPortion(1)))
         .spacing(10)
         .align_items(Alignment::End))
@@ -94,9 +95,9 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     .spacing(10)
                     .push(Text::new("Select the output format").width(Length::Fill).horizontal_alignment(Center))
                     .push(selection_list)
-                    .push(Text::new("Select the output folder"))
+                    .push(Text::new("Select the output folder").width(Length::Fill).horizontal_alignment(Center))
                     .push(choose_path)
-                    .push(Text::new("Select the name"))
+                    .push(Text::new("Select the name").width(Length::Fill).horizontal_alignment(Center))
                     .push(choose_name)
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
@@ -117,7 +118,6 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     },
                 )
                 .max_width(300.0)
-                //.width(Length::Shrink)
                 .on_close(Message::CloseModal),
         )
 }

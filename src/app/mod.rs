@@ -1,34 +1,30 @@
-use directories::UserDirs;
-
 use iced::subscription::events_with;
 use iced::{Application, Command, Element, Renderer, executor, window, Length, alignment, Alignment, ContentFit, Theme, Subscription, font, Font, Point};
 use iced::widget::{container, column, row, text, svg, image, Row, responsive, Canvas};
 use iced::widget::space::Space;
 use iced::window::Mode;
+use iced::keyboard::{self, KeyCode};
+use iced::event::Event;
+use iced::Length::Fill;
 use iced_aw::{floating_element, modal, SelectionList, SelectionListStyles};
-use screenshots::image::{DynamicImage};
 use iced_aw::native::Spinner;
+use directories::UserDirs;
+use screenshots::image::{DynamicImage};
 
 use crate::custom_widgets::image_button;
 use crate::hotkeys::hotkeys_logic::{Hotkeys, HotkeysMap};
 use crate::menu::top_menu;
-
+use crate::crop::CropArea;
+use crate::toast::toast_logic::{Toast, Status, Manager, DEFAULT_TIMEOUT};
 use crate::app::SaveState::{Nothing, OnGoing};
-use crate::modals::save_as_modal::{Formats, save_as_modal};
 use crate::utils::utils::*;
 
-use crate::modals::setdefaultpath_modal::setpath_modal;
-
-use iced::keyboard::{self, KeyCode};
-use crate::modals::delay_modal::delay_modal;
-
-use iced::event::Event;
-use iced::Length::Fill;
-use crate::crop::CropArea;
-use crate::modals::hotkeys_modal::hotkeys_modal;
 use crate::modals::Modals;
+use crate::modals::save_as_modal::{Formats, save_as_modal};
+use crate::modals::defaultpath_modal::setpath_modal;
+use crate::modals::delay_modal::delay_modal;
+use crate::modals::hotkeys_modal::hotkeys_modal;
 
-use crate::toast::toast_logic::{Toast, Status, Manager, DEFAULT_TIMEOUT};
 
 
 #[derive(Debug, Default)]
@@ -38,11 +34,11 @@ pub struct App {
     save_path: String,
     save_name: String,
     save_state: SaveState,
-    //Needed for save as section
+    //Formats
     formats: Vec<String>,
     export_format: Formats,
     manual_select: Option<usize>,
-    //Settings
+    //Delay
     delay_time: f32,
     temp: f32,
     //Hotkeys
@@ -53,6 +49,7 @@ pub struct App {
     copy_status: CopyState,
     // Modal to be shown
     modal: Modals,
+    //Toast
     toasts: Vec<Toast>,
     //Multi monitor
     screens: Vec<String>,
@@ -264,7 +261,7 @@ impl Application for BootstrapApp {
                     }
                     Message::MenuAction(action) => {
                         if app.screenshot.is_none() && action != Modals::DelayTime && action != Modals::Hotkeys && action != Modals::SetPath {
-                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "Screenshot not available".into(), Status::Danger));
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Screenshot not available".into(), Status::Warning));
                         };
                         match action {
                             Modals::Save => {
@@ -348,7 +345,7 @@ impl Application for BootstrapApp {
                     }
                     Message::SaveAsButtonPressed => {
                         if app.screenshot.is_none() {
-                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "Screenshot not available".into(), Status::Danger));
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Screenshot not available".into(), Status::Warning));
                         };
                         let screenshot = app.screenshot.clone().unwrap();
                         app.save_state = SaveState::OnGoing;
@@ -388,8 +385,6 @@ impl Application for BootstrapApp {
                                 Command::none()
                             }
                         } else {
-                            //Change the hotkey
-                            //Check that the char inserted is not already used
                             if app.temp_hotkeys.char_already_used(event) {
                                 app.hotkeys_error_message = Some("Combination already in use".to_string());
                             } else {
@@ -407,6 +402,9 @@ impl Application for BootstrapApp {
                     }
                     Message::CopyToClipboard => {
                         if app.copy_status == CopyState::OnGoing { return Command::none(); };
+                        if app.screenshot.is_none() {
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Screenshot not available".into(), Status::Warning));
+                        };
                         app.copy_status = CopyState::OnGoing;
                         Command::perform(copy_to_clipboard(app.screenshot.clone()), Message::CopySuccess)
                     }
@@ -488,7 +486,7 @@ impl Application for BootstrapApp {
                         let width = app.crop_area.1.x - app.crop_area.0.x;
                         let height = app.crop_area.1.y - app.crop_area.0.y;
                         if width.abs() <= 5. && height.abs() <= 5. {
-                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "The area drawn is too small!".into(), Status::Danger));
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "The area drawn is too small!".into(), Status::Warning));
                         };
                         match (width > 0., height > 0.) {
                             (true, true) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.0.x as u32, app.crop_area.0.y as u32, width.abs() as u32, height.abs() as u32)),
@@ -497,7 +495,6 @@ impl Application for BootstrapApp {
                             (false, false) => app.screenshot = Some(app.temp_img.clone().expect("Temp image not found").crop(app.crop_area.1.x as u32, app.crop_area.1.y as u32, width.abs() as u32, height.abs() as u32))
                         }
                         app.temp_img = app.screenshot.clone();
-                        // Reset crop mode after cropping
                         app.crop_mode = false;
                         Command::none()
                     }
