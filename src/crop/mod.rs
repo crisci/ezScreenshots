@@ -1,7 +1,5 @@
 use iced::widget::canvas;
-
 use iced::{Color, mouse, Point, Rectangle, Renderer, Size, Theme};
-
 use iced::event::Status;
 use iced::mouse::{Cursor, Interaction};
 use iced::mouse::Button::Left;

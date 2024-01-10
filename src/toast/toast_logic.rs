@@ -1,7 +1,7 @@
     use std::fmt;
     use std::time::{Duration, Instant};
 
-    use iced::advanced;
+    use iced::{advanced, Color};
     use iced::advanced::layout::{self, Layout};
     use iced::advanced::overlay;
     use iced::advanced::renderer;
@@ -18,6 +18,8 @@
         Alignment, Element, Length, Point, Rectangle, Renderer, Size, Theme,
         Vector,
     };
+    use iced::alignment::Horizontal;
+    use iced::theme::palette::Pair;
 
     pub const DEFAULT_TIMEOUT: u64 = 5;
 
@@ -28,6 +30,7 @@
         Secondary,
         Success,
         Danger,
+        Warning,
     }
 
     impl Status {
@@ -44,8 +47,9 @@
             let pair = match self {
                 Status::Primary => palette.primary.weak,
                 Status::Secondary => palette.secondary.weak,
-                Status::Success => palette.success.weak,
-                Status::Danger => palette.danger.weak,
+                Status::Success => Pair::new(Color::from_rgb8(92,184,92),Color::BLACK),
+                Status::Danger => Pair::new(Color::from_rgb8(217,83,78),Color::BLACK) ,
+                Status::Warning => Pair::new(Color::from_rgb8(240,184,92),Color::BLACK)
             };
 
             container::Appearance {
@@ -63,6 +67,7 @@
                 Status::Secondary => "Secondary",
                 Status::Success => "Success",
                 Status::Danger => "Danger",
+                Status::Warning => "Warning",
             }
                 .fmt(f)
         }
@@ -98,11 +103,12 @@
                     container(column![
                         container(
                             row![
-                                text(toast.title.as_str()),
-                                horizontal_space(Length::Fill),
-                                button("X")
+                                horizontal_space(Length::FillPortion(1)),
+                                text(toast.title.as_str()).width(Length::FillPortion(11)).horizontal_alignment(Horizontal::Center),
+                                button("x")
                                     .on_press((on_close)(index))
-                                    .padding(3),
+                                    .padding(3)
+                                    .width(Length::FillPortion(1)),
                             ]
                             .align_items(Alignment::Center)
                         )

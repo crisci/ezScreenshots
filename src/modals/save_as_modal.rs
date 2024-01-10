@@ -95,9 +95,9 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     .spacing(10)
                     .push(Text::new("Select the output format").width(Length::Fill).horizontal_alignment(Center))
                     .push(selection_list)
-                    .push(Text::new("Select the output folder"))
+                    .push(Text::new("Select the output folder").width(Length::Fill).horizontal_alignment(Center))
                     .push(choose_path)
-                    .push(Text::new("Select the name"))
+                    .push(Text::new("Select the name").width(Length::Fill).horizontal_alignment(Center))
                     .push(choose_name)
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
@@ -118,7 +118,6 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     },
                 )
                 .max_width(300.0)
-                //.width(Length::Shrink)
                 .on_close(Message::CloseModal),
         )
 }
