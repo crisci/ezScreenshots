@@ -47,9 +47,9 @@
             let pair = match self {
                 Status::Primary => palette.primary.weak,
                 Status::Secondary => palette.secondary.weak,
-                Status::Success => Pair::new(Color::from_rgb8(92,184,92),Color::BLACK),
-                Status::Danger => Pair::new(Color::from_rgb8(217,83,78),Color::BLACK) ,
-                Status::Warning => Pair::new(Color::from_rgb8(240,184,92),Color::BLACK)
+                Status::Success => Pair::new(Color::from_rgb8(132,165,158),Color::BLACK),
+                Status::Danger => Pair::new(Color::from_rgb8(242,133,130),Color::BLACK) ,
+                Status::Warning => Pair::new(Color::from_rgb8(245,189,96),Color::BLACK)
             };
 
             container::Appearance {
