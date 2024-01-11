@@ -173,7 +173,7 @@ impl Hotkeys {
         Ok(())
     }
 
-    pub fn unicode_to_str(c: char) -> Option<String> {
+    pub(crate) fn unicode_to_str(c: char) -> Option<String> {
         match c {
             '\u{1}' => Some("CTRL + A".to_string()),
             '\u{2}' => Some("CTRL + B".to_string()),

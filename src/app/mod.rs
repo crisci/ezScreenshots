@@ -27,6 +27,7 @@ use crate::modals::hotkeys_modal::hotkeys_modal;
 
 
 
+
 #[derive(Debug, Default)]
 pub struct App {
     screenshot: Option<DynamicImage>,
@@ -385,6 +386,9 @@ impl Application for BootstrapApp {
                                 Command::none()
                             }
                         } else {
+                            if Hotkeys::unicode_to_str(event).is_none() {
+                                return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Combination not valid".into(), Status::Warning));
+                            }
                             if app.temp_hotkeys.char_already_used(event) {
                                 app.hotkeys_error_message = Some("Combination already in use".to_string());
                             } else {
