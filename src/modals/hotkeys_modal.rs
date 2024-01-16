@@ -1,6 +1,5 @@
 use iced::{Alignment, Color, Length};
 use iced::alignment::Horizontal;
-use iced::application::StyleSheet;
 use iced::Length::Fill;
 use iced::widget::{button, Column, container, Row, Text};
 use iced_aw::Card;
@@ -14,7 +13,7 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
             Card::new(
                 Text::new("Hotkeys"),
                 Column::new()
-                    .width(Length::Fill)
+                    .width(Fill)
                     .align_items(Alignment::Center)
                     .push(Row::new().push(rounded_container("Save".into()).align_x(Horizontal::Center).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Save))).align_x(Horizontal::Center).width(Length::Fixed(80.))))
                     .push(Row::new().push(rounded_container("Save as".into()).align_x(Horizontal::Center).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save_as()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::SaveAs))).align_x(Horizontal::Center).width(Length::Fixed(80.))))
@@ -34,8 +33,8 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
                     Row::new()
                         .spacing(10)
                         .padding(5)
-                        .width(Length::Fill)
-                        .width(Length::Fill)
+                        .width(Fill)
+                        .width(Fill)
                         .push(
                             rounded_button("Cancel", Message::CloseModal)
                         )
