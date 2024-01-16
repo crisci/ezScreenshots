@@ -203,10 +203,9 @@ pub async fn copy_to_clipboard(image: Option<DynamicImage>) -> Result<(), CopyEr
         if path.len() < length { path }
         else {
             let mut it = Path::new(&path).iter();
-            it.next();
-            let first_path = it.next().unwrap().to_str().unwrap().to_string();
-            let last_path = it.last().unwrap().to_str().unwrap().to_string();
-            if format!("{}{}...{}{}", first_path, MAIN_SEPARATOR, MAIN_SEPARATOR, last_path).len() < length { format!("{}{}...{}{}", first_path, MAIN_SEPARATOR, MAIN_SEPARATOR, last_path) }
+            let last_path = it.next_back().unwrap().to_str().unwrap().to_string();
+            let previous_path = it.last().unwrap().to_str().unwrap().to_string();
+            if format!("...{}{}{}{}", MAIN_SEPARATOR,previous_path, MAIN_SEPARATOR, last_path).len() < length { format!("...{}{}{}{}", MAIN_SEPARATOR,previous_path, MAIN_SEPARATOR, last_path) }
             else if format!("...{}{}", MAIN_SEPARATOR, last_path).len() < length { format!("...{}{}", MAIN_SEPARATOR, last_path) }
             else {
                 let (first, _second) = last_path.split_at(19);
