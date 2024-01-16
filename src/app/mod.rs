@@ -35,6 +35,7 @@ pub struct App {
     save_path: String,
     save_name: String,
     save_state: SaveState,
+    save_error_message: Option<String>,
     //Formats
     formats: Vec<String>,
     export_format: Formats,
@@ -86,6 +87,7 @@ impl App {
             save_path: path,
             save_name: "".to_string(),
             save_state: SaveState::Nothing,
+            save_error_message: None,
             formats: vec,
             export_format: Formats::Png,
             manual_select: Some(0),
@@ -125,6 +127,10 @@ impl App {
 
     pub(crate) fn save_state(&self) -> SaveState {
         self.save_state.clone()
+    }
+
+    pub(crate) fn get_save_error(&self) -> Option<String> {
+        self.save_error_message.clone()
     }
 
     pub(crate) fn delay_time(&self) -> f32 { self.delay_time }
@@ -173,7 +179,6 @@ pub enum Message {
     Screenshot,
     WindowHidden,
     Drop,
-    Resize,
     MenuAction(Modals),
     ScreenshotSaved(Result<String, ExportError>),
     CloseModal,
@@ -243,7 +248,7 @@ impl Application for BootstrapApp {
         match self {
             BootstrapApp::Loading => {
                 if let Message::Loaded(_) = message {
-                    *self = BootstrapApp::Loaded(App::new()) // TODO: Implement default for app
+                    *self = BootstrapApp::Loaded(App::new())
                 }
             }
             BootstrapApp::Loaded(app) => {
@@ -313,8 +318,9 @@ impl Application for BootstrapApp {
                         Command::none()
                     }
                     Message::ScreenshotSaved(res) => {
-                        if res.is_err() { panic!("{:?}", res.err()) }
-                        let success = Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Success".into(), "Screenshot saved correctly!".into(), Status::Success));
+                        let success =
+                            if res.is_err() {Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Error".into(), "Unable to find the destination directory".into(), Status::Danger)) }
+                            else {Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Success".into(), "Screenshot saved correctly!".into(), Status::Success))};
                         let init = Command::perform(tokio::time::sleep(std::time::Duration::from_millis(500)), |_| Message::Init);
                         let commands = vec![success, init];
                         Command::batch(commands)
@@ -339,6 +345,7 @@ impl Application for BootstrapApp {
                         app.temp_hotkeys = app.hotkeys.clone();
                         app.modal = Modals::None;
                         app.hotkeys_modification = HotkeysMap::None;
+                        app.save_error_message = None;
                         Command::none()
                     }
                     Message::OpenSetPathModal => {
@@ -349,12 +356,14 @@ impl Application for BootstrapApp {
                         if app.screenshot.is_none() {
                             return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Screenshot not available".into(), Status::Warning));
                         };
+                        if app.save_name.trim().is_empty() {app.save_error_message = Some("Name is required".into()); return Command::none()}
                         let screenshot = app.screenshot.clone().unwrap();
+                        app.save_error_message = None;
                         app.save_state = SaveState::OnGoing;
                         match app.export_format {
-                            Formats::Png => { Command::perform(save_to_png(screenshot, app.save_path(), app.save_name()), Message::ScreenshotSaved) }
-                            Formats::Gif => { Command::perform(save_to_gif(screenshot, app.save_path(), app.save_name()), Message::ScreenshotSaved) }
-                            Formats::Jpeg => { Command::perform(save_to_jpeg(screenshot, app.save_path(), app.save_name()), Message::ScreenshotSaved) }
+                            Formats::Png => { Command::perform(save_to_png(screenshot, app.save_path(), app.save_name().trim().into()), Message::ScreenshotSaved) }
+                            Formats::Gif => { Command::perform(save_to_gif(screenshot, app.save_path(), app.save_name().trim().into()), Message::ScreenshotSaved) }
+                            Formats::Jpeg => { Command::perform(save_to_jpeg(screenshot, app.save_path(), app.save_name().trim().into()), Message::ScreenshotSaved) }
                         }
                     }
                     Message::FormatSelected(_, format) => {
@@ -377,7 +386,7 @@ impl Application for BootstrapApp {
                     }
                     Message::KeyboardComb(event) => {
                         return if app.hotkeys_modification == HotkeysMap::None {
-                            if app.modal == Modals::None {
+                            if (app.modal == Modals::None && !app.crop_mode ) || (event == app.hotkeys.get_resize() && app.crop_mode) || event == app.hotkeys.get_exit()  {
                                 if let Some(m) = app.hotkeys.to_message(event) {
                                     Command::perform(async {}, |_| { m })
                                 } else {
@@ -427,6 +436,8 @@ impl Application for BootstrapApp {
                     Message::HotkeysSave => {
                         app.hotkeys = app.temp_hotkeys.clone();
                         app.temp_hotkeys = app.hotkeys.clone();
+                        app.hotkeys_error_message = None;
+                        app.hotkeys_modification = HotkeysMap::None;
                         match app.hotkeys.save_hotkeys() {
                             _ => ()
                         };
@@ -506,6 +517,9 @@ impl Application for BootstrapApp {
                         Command::none()
                     }
                     Message::CropModeSwitch => {
+                        if app.screenshot.is_none() {
+                            return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Screenshot not available".into(), Status::Warning));
+                        };
                         if !app.crop_mode {
                             // Enabled
                             app.crop_area = (Default::default(), Default::default());

@@ -5,7 +5,7 @@ use crate::app::{App, Message};
 use crate::custom_widgets::rounded_button;
 
 pub fn delay_modal(app: &App) -> Option<Card<Message>> {
-    let txt_seconds = number_input(app.temp(), 100., Message::DelayChanged)
+    let txt_seconds = number_input(app.temp(), 10000., Message::DelayChanged)
         .style(NumberInputStyles::Default)
         .step(1.);
     return

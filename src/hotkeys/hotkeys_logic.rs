@@ -126,7 +126,7 @@ impl Hotkeys {
             _ if self.exit == c => Some(Message::Quit),
             _ if self.copy == c => Some(Message::CopyToClipboard),
             _ if self.delay == c => Some(Message::MenuAction(Modals::DelayTime)),
-            _ if self.resize == c => Some(Message::Resize),
+            _ if self.resize == c => Some(Message::CropModeSwitch),
             _ if self.screenshot == c => Some(Message::Screenshot),
             _ => None,
         };
