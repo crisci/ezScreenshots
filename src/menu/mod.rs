@@ -41,7 +41,7 @@ fn return_action(label: &str) -> Modals {
         "Delay" => Modals::DelayTime,
         "Hotkeys" => Modals::Hotkeys,
         "Default Path" => Modals::SetPath,
-        _ => panic!("Not recognized action")
+        _ => Modals::None
     }
 }
 

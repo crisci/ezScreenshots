@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use iced::alignment::Horizontal::Center;
-use iced::{Alignment, Font, Length};
+use iced::{Alignment, Color, Font, Length};
 use iced::widget::{Column, container, Row, Text, text_input};
 use iced_aw::{Card, SelectionList, SelectionListStyles};
 use iced_aw::native::Spinner;
@@ -99,6 +99,7 @@ pub fn save_as_modal<'a>(app: &'a App) -> Option<Card<'a, Message>> {
                     .push(choose_path)
                     .push(Text::new("Select the name").width(Length::Fill).horizontal_alignment(Center))
                     .push(choose_name)
+                    .push(if app.get_save_error().is_some() {Row::new().push(Text::new(app.get_save_error().unwrap()).style(iced::theme::Text::Color(Color::new(1., 0., 0., 1.))))} else {Row::new()})
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
             )
