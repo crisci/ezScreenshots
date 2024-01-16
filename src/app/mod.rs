@@ -390,7 +390,8 @@ impl Application for BootstrapApp {
                                 return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Combination not valid".into(), Status::Warning));
                             }
                             if app.temp_hotkeys.char_already_used(event) {
-                                app.hotkeys_error_message = Some("Combination already in use".to_string());
+                                return Command::perform(async {  }, |_| Message::AddToast("Warning".into(), "Combination already used".into(), Status::Warning));
+                                //app.hotkeys_error_message = Some("Combination already in use".to_string());
                             } else {
                                 //Assign temp structure
                                 app.temp_hotkeys.assign_new_value(event, app.hotkeys_modification.clone());

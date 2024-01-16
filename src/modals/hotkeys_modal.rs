@@ -1,6 +1,7 @@
 use iced::{Alignment, Length};
+use iced::alignment::Horizontal;
 use iced::Length::Fill;
-use iced::widget::{button, Column, Row, Text};
+use iced::widget::{button, Column, container, Row, Text};
 use iced_aw::Card;
 use crate::app::{App, Message};
 use crate::custom_widgets::rounded_button;
@@ -14,14 +15,14 @@ pub fn hotkeys_modal(app: &App) -> Option<Card<Message>> {
                 Column::new()
                     .width(Length::Fill)
                     .align_items(Alignment::Center)
-                    .push(Row::new().push(Text::new("Save")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Save))))
-                    .push(Row::new().push(Text::new("Save as")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save_as()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::SaveAs))))
-                    .push(Row::new().push(Text::new("Delete")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_delete()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delete))))
-                    .push(Row::new().push(Text::new("Exit")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_exit()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Exit))))
-                    .push(Row::new().push(Text::new("Copy")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_copy()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Copy))))
-                    .push(Row::new().push(Text::new("Delay")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_delay()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delay))))
-                    .push(Row::new().push(Text::new("Resize")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_resize()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Resize))))
-                    .push(Row::new().push(Text::new("Screenshot")).push(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_screenshot()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Screenshot)))) 
+                    .push(Row::new().push(container(Text::new("Save")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Save))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
+                    .push(Row::new().push(container(Text::new("Save as")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_save_as()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::SaveAs))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
+                    .push(Row::new().push(container(Text::new("Delete")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_delete()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delete))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
+                    .push(Row::new().push(container(Text::new("Exit")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_exit()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Exit))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
+                    .push(Row::new().push(container(Text::new("Copy")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_copy()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Copy))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
+                    .push(Row::new().push(container(Text::new("Delay")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_delay()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Delay))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
+                    .push(Row::new().push(container(Text::new("Resize")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_resize()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Resize))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
+                    .push(Row::new().push(container(Text::new("Screenshot")).align_x(Horizontal::Left).width(Length::Fixed(100.))).push(container(button(Text::new(hotkeys_logic::Hotkeys::unicode_to_str(app.temp_hotkeys().get_screenshot()).unwrap())).on_press(Message::ChangeHotkey(HotkeysMap::Screenshot))).align_x(Horizontal::Left).width(Length::Fixed(80.))))
                     .push( if app.get_hotkey_modification() != HotkeysMap::None {
                         Row::new().push(Text::new(format!("Insert the new combination for {}", app.get_hotkey_modification())))
                     } else {Row::new()})   
