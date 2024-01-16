@@ -1,6 +1,5 @@
 use iced::{Alignment, Color, Length};
 use iced::alignment::Horizontal;
-use iced::application::StyleSheet;
 use iced::Length::Fill;
 use iced::widget::{button, Column, container, Row, Text};
 use iced_aw::Card;
