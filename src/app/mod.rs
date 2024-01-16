@@ -334,6 +334,7 @@ impl Application for BootstrapApp {
                     }
                     Message::CloseModal => {
                         if app.modal == Modals::SaveAs || app.modal == Modals::SetPath { app.save_path = app.default_path.clone() }
+                        app.hotkeys_error_message = None;
                         app.temp = app.delay_time;
                         app.temp_hotkeys = app.hotkeys.clone();
                         app.modal = Modals::None;
@@ -387,11 +388,11 @@ impl Application for BootstrapApp {
                             }
                         } else {
                             if Hotkeys::unicode_to_str(event).is_none() {
-                                return Command::perform(tokio::time::sleep(std::time::Duration::from_millis(0)), |_| Message::AddToast("Warning".into(), "Combination not valid".into(), Status::Warning));
+                                app.hotkeys_error_message = Some("Combination not valid".to_string());
+                                return Command::none();
                             }
                             if app.temp_hotkeys.char_already_used(event) {
-                                return Command::perform(async {  }, |_| Message::AddToast("Warning".into(), "Combination already used".into(), Status::Warning));
-                                //app.hotkeys_error_message = Some("Combination already in use".to_string());
+                                app.hotkeys_error_message = Some("Combination already in use".to_string());
                             } else {
                                 //Assign temp structure
                                 app.temp_hotkeys.assign_new_value(event, app.hotkeys_modification.clone());
@@ -402,6 +403,7 @@ impl Application for BootstrapApp {
                         };
                     }
                     Message::ChangeHotkey(hotkey) => {
+                        app.hotkeys_error_message = None;
                         app.hotkeys_modification = hotkey;
                         Command::none()
                     }
