@@ -159,7 +159,7 @@ impl Hotkeys {
 
     pub fn save_hotkeys(&self) -> Result<(), String> {
         let dir = directories::BaseDirs::new().ok_or("Error getting base directories")?;
-        let new_dir = PathBuf::from(format!("{}/{}", dir.data_local_dir().to_str().ok_or("Error getting data local dir")?, "ezScreenshot"));
+        let new_dir = PathBuf::from(format!("{}/{}", dir.data_local_dir().to_str().ok_or("Error getting data local dir")?, "ezScreenshots   "));
         let file_path = new_dir.join("hotkey.config");
     
         if !new_dir.exists() {
